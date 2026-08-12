@@ -1,0 +1,24 @@
+# Dépendances
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+
+# Environnement
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Build / Cache
+dist/
+build/
+.next/
+.turbo/
+
+# OS
+Desktop.ini
