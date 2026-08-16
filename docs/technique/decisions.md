@@ -228,6 +228,70 @@ Une décision peut être **Active**, **Dépréciée** ou **Remplacée par** une 
 
 ---
 
+## Lot 1 — Authentification
+
+### DT-Lot1-01 — Authentification single-user (signups publics désactivés)
+
+**Statut** : Actif
+**Date** : S11
+
+**Contexte** : le projet est un outil personnel destiné à un unique utilisateur (le créateur du projet). Il ne s'agit pas d'une application SaaS multi-tenant.
+
+**Décision** : dans Supabase Auth, désactiver **"Allow new users to sign up"** et désactiver la **"Confirm email"**. L'unique utilisateur est créé manuellement en admin depuis le dashboard Supabase, avec Auto Confirm activé.
+
+**Alternatives envisagées** :
+- Laisser signups ouverts + confirmation email — écarté : ouvre la porte à des inscriptions parasites qui pollueraient la base
+- Créer l'utilisateur via une seed SQL — écarté : sur-ingénierie pour un seul compte
+
+**Conséquences** :
+- Aucune UI de signup à développer (page /signup absente par conception)
+- Les futures policies RLS Supabase (Lot 2+) pourront s'appuyer sur le principe "un seul user légitime = `auth.uid()` unique"
+- Si un jour l'app doit devenir multi-user, cette DT devra être **remplacée** par une nouvelle décision, et il faudra revoir les policies RLS et créer la page /signup
+
+---
+
+### DT-Lot1-02 — Convention `proxy.ts` racine (Next.js 16)
+
+**Statut** : Actif
+**Date** : S11
+
+**Contexte** : Next.js 16 introduit `proxy.ts` comme convention pour le rafraîchissement de session (remplace la convention `middleware.ts` de Next.js 13-15). Le helper Supabase SSR `updateSession()` doit être appelé sur chaque requête pour maintenir les cookies d'auth à jour.
+
+**Décision** : créer directement `proxy.ts` à la racine du projet (pas de fichier `middleware.ts`), qui délègue à `src/lib/supabase/middleware.ts` pour la logique de refresh session + protection routes.
+
+**Alternatives envisagées** :
+- Créer `middleware.ts` puis migrer vers `proxy.ts` plus tard — écarté : générer volontairement de la dette technique alors que Next.js 16 est déjà le socle du projet
+- Ne pas rafraîchir la session sur chaque requête — écarté : impossible avec Supabase SSR, la session doit être renouvelée pour rester valide
+
+**Conséquences** :
+- Zéro dette de migration `middleware` → `proxy` à traiter plus tard
+- La logique reste externalisée dans `src/lib/supabase/middleware.ts` (le nom `middleware.ts` interne est purement organisationnel, il ne suit pas la convention Next.js)
+- Toute modification du proxy racine doit inclure une vérification que la logique de refresh session Supabase reste correcte
+
+---
+
+### DT-Lot1-03 — Consolidation sous `src/app/` + dette technique alias tsconfig
+
+**Statut** : Actif — **contient une dette technique à traiter**
+**Date** : S11
+
+**Contexte** : lors du scaffold initial Next.js, le dossier `app/` a été créé à la racine du projet. Pour uniformiser avec `src/lib/` et `src/modules/`, tout le code source doit vivre sous `src/`.
+
+**Décision** : migrer `app/` → `src/app/`. Tout le code source vit désormais sous `src/`. Le `proxy.ts` reste à la racine (contrainte Next.js).
+
+**Dette technique associée** : le fichier `tsconfig.json` définit toujours l'alias `"@/*": ["./*"]` au lieu de `"@/*": ["./src/*"]`. Résultat : les imports actuels utilisent la forme non-standard `@/src/lib/...` au lieu de `@/lib/...`. Cela fonctionne mais n'est pas la convention Next.js standard.
+
+**Alternatives envisagées** :
+- Corriger l'alias tsconfig immédiatement au Lot 1 — écarté : nécessite de modifier tous les imports du projet, effort dispersé sur du code auth déjà écrit et testé
+- Garder `app/` à la racine — écarté : incohérence structurelle avec `src/lib/` et `src/modules/`
+
+**Conséquences** :
+- Structure uniforme `src/` respectée
+- **Dette** : chaque nouvel import doit utiliser le format `@/src/lib/...` (non standard) jusqu'à traitement
+- **Traitement prévu** : chantier dédié en début Lot 2 ou entre Lot 2 et Lot 3. Ne pas oublier de mettre à jour tous les imports existants dans la même PR
+
+---
+
 ## Convention de mise à jour
 
 - Une décision figée ne se **supprime jamais** : on la marque `Déprécié` ou `Remplacée par DT-YY`.
