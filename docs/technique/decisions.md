@@ -291,6 +291,28 @@ Une décision peut être **Active**, **Dépréciée** ou **Remplacée par** une 
 - **Traitement prévu** : chantier dédié en début Lot 2 ou entre Lot 2 et Lot 3. Ne pas oublier de mettre à jour tous les imports existants dans la même PR
 
 ---
+## Lot 2 — M1 Projets
+
+### DT-Lot2-01 — Champ `archive_reason` obligatoire au niveau applicatif
+
+**Statut** : Actif
+**Date** : S15
+
+**Contexte** : lors de l'implémentation de l'archivage des projets (étape 4 du Lot 2), le besoin métier est apparu de documenter la raison de chaque archivage. Sans cette information, les rétrospectives et les décisions futures sur des projets similaires manquent de contexte.
+
+**Décision** : ajouter un champ `archive_reason TEXT NULL` à la table `projects`. La règle "raison obligatoire si statut = Archivé" est **validée uniquement au niveau applicatif** (Server Action `archiveProject`), pas au niveau base de données.
+
+**Alternatives envisagées** :
+- Contrainte CHECK PostgreSQL (`CHECK ((status = 'Archivé' AND archive_reason IS NOT NULL) OR (status != 'Archivé' AND archive_reason IS NULL))`) — écarté : incohérent avec la dette "validation applicative uniquement" assumée depuis S13, et rigidifie inutilement la migration
+- Rendre le champ NOT NULL en base avec une valeur par défaut vide pour les projets non-archivés — écarté : sémantiquement faux (un projet non-archivé n'a pas de "raison d'archivage vide", il n'en a simplement pas)
+
+**Conséquences** :
+- La Server Action `archiveProject` valide que `archive_reason` est non-vide avant l'UPDATE
+- Un UPDATE direct dans Supabase Studio pourrait créer une incohérence (projet archivé sans raison, ou raison sans archivage). Risque accepté car single-user (voir DT-Lot1-01) et Server Action unique chemin d'écriture applicatif
+- Si l'app devient multi-user ou expose une API publique (Lot 6+), cette DT devra être reconsidérée : ajouter la contrainte CHECK via une migration dédiée
+- La raison peut être modifiée après archivage (correction, ajout de contexte) mais pas supprimée (règle documentée dans `05.Cycle_de_Vie.md` section 4bis)
+
+---
 
 ## Convention de mise à jour
 
