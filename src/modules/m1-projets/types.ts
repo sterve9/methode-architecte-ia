@@ -34,6 +34,7 @@ export type Project = {
   business_problem: string
   status: ProjectStatus
   start_date: string
+  archive_reason: string | null
   created_at: string
   updated_at: string
 }

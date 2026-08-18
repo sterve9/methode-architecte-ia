@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getProjectById } from '@/modules/m1-projets/queries/get-project-by-id';
+import { canTransition } from '@/modules/m1-projets/domain/transitions';
 
 /**
  * Page détail d'un projet.
@@ -8,8 +9,12 @@ import { getProjectById } from '@/modules/m1-projets/queries/get-project-by-id';
  * Route : /dashboard/projects/[id]
  *
  * Comportement :
- * - Si le projet n'existe pas OU appartient à un autre user (RLS) → 404
- * - Sinon : affichage lecture seule + boutons Modifier / Archiver / Retour
+ * - 404 si projet inexistant ou appartenant à un autre user (RLS)
+ * - Affichage lecture seule
+ * - Bouton "Modifier" toujours visible
+ * - Bouton "Archiver" visible uniquement si la transition vers Archivé
+ *   est autorisée depuis le statut actuel (T6, T7, T8)
+ * - Si projet archivé : affichage de la raison d'archivage
  */
 export default async function ProjectDetailPage({
   params,
@@ -22,6 +27,9 @@ export default async function ProjectDetailPage({
   if (!project) {
     notFound();
   }
+
+  const canArchive = canTransition(project.status, 'Archivé');
+  const isArchived = project.status === 'Archivé';
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleString('fr-FR', {
@@ -43,7 +51,7 @@ export default async function ProjectDetailPage({
           style={{
             padding: '0.2rem 0.6rem',
             borderRadius: '4px',
-            background: project.status === 'Archivé' ? '#ddd' : '#e8f4ff',
+            background: isArchived ? '#ddd' : '#e8f4ff',
           }}
         >
           {project.status}
@@ -56,6 +64,23 @@ export default async function ProjectDetailPage({
         </h2>
         <p style={{ whiteSpace: 'pre-wrap' }}>{project.business_problem}</p>
       </section>
+
+      {isArchived && project.archive_reason && (
+        <section
+          style={{
+            marginBottom: '2rem',
+            padding: '1rem',
+            background: '#f5f5f5',
+            border: '1px solid #ccc',
+            borderRadius: '6px',
+          }}
+        >
+          <h2 style={{ fontSize: '1.1rem', marginBottom: '0.5rem', marginTop: 0 }}>
+            Raison de l&apos;archivage
+          </h2>
+          <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{project.archive_reason}</p>
+        </section>
+      )}
 
       <section
         style={{
@@ -82,25 +107,19 @@ export default async function ProjectDetailPage({
           Modifier
         </Link>
 
-        {project.status !== 'Archivé' && (
-          <form
-            action={`/dashboard/projects/${project.id}/archive`}
-            method="post"
+        {canArchive && (
+          <Link
+            href={`/dashboard/projects/${project.id}/archive`}
+            style={{
+              padding: '0.5rem 1rem',
+              background: '#888',
+              color: 'white',
+              borderRadius: '4px',
+              textDecoration: 'none',
+            }}
           >
-            <button
-              type="submit"
-              style={{
-                padding: '0.5rem 1rem',
-                background: '#888',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-            >
-              Archiver
-            </button>
-          </form>
+            Archiver
+          </Link>
         )}
       </div>
     </main>
