@@ -9,15 +9,13 @@ import type { ProjectStatus } from '../types';
 /**
  * Server Action : met à jour un projet existant.
  *
- * Vérifie que la transition de statut est autorisée par la méthode
- * (voir docs/methode/05.Cycle_de_Vie.md).
+ * Vérifie toute véritable transition de statut selon les règles définies
+ * dans docs/methode/05.Cycle_de_Vie.md.
+ *
+ * Une modification du nom ou du problème métier sans changement de statut
+ * reste autorisée.
  *
  * Redirige vers la page détail du projet en cas de succès.
- * Jette une erreur en cas de :
- * - Champs manquants ou vides
- * - Projet inexistant (ou appartenant à un autre user, via RLS)
- * - Transition de statut interdite
- * - Erreur Supabase
  */
 export async function updateProject(formData: FormData): Promise<void> {
   const id = formData.get('id')?.toString().trim();
@@ -31,7 +29,6 @@ export async function updateProject(formData: FormData): Promise<void> {
 
   const supabase = await createClient();
 
-  // Récupérer le statut actuel pour vérifier la transition
   const { data: current, error: fetchError } = await supabase
     .from('projects')
     .select('status')
@@ -47,10 +44,16 @@ export async function updateProject(formData: FormData): Promise<void> {
     throw new Error('Projet introuvable');
   }
 
-  // Vérifier la transition (jette si interdite)
-  assertCanTransition(current.status, newStatus);
+  /*
+   * Conserver le même statut est autorisé lorsque l'utilisateur modifie
+   * seulement le nom ou le problème métier.
+   *
+   * Toute véritable modification de statut doit respecter le cycle de vie.
+   */
+  if (current.status !== newStatus) {
+    assertCanTransition(current.status, newStatus);
+  }
 
-  // Effectuer l'UPDATE
   const { error: updateError } = await supabase
     .from('projects')
     .update({
@@ -65,10 +68,8 @@ export async function updateProject(formData: FormData): Promise<void> {
     throw new Error('Erreur lors de la mise à jour du projet');
   }
 
-  // Invalider les caches Next
   revalidatePath('/dashboard/projects');
   revalidatePath(`/dashboard/projects/${id}`);
 
-  // Rediriger vers la page détail
   redirect(`/dashboard/projects/${id}`);
 }
