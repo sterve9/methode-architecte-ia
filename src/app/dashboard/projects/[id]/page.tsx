@@ -3,8 +3,11 @@ import { notFound } from 'next/navigation'
 
 import { canTransition } from '@/modules/m1-projets/domain/transitions'
 import { getProjectById } from '@/modules/m1-projets/queries/get-project-by-id'
+import { getProjectDeliverables } from '@/modules/m2-methode/queries/get-project-deliverables'
 import { getProjectSteps } from '@/modules/m2-methode/queries/get-project-steps'
 import { MethodStepStatus } from '@/modules/m2-methode/types'
+import { AddDeliverableForm } from '@/modules/m2-methode/ui/add-deliverable-form'
+import { DeliverableItem } from '@/modules/m2-methode/ui/deliverable-item'
 import { StepStatusButton } from '@/modules/m2-methode/ui/step-status-button'
 
 /**
@@ -38,6 +41,7 @@ export default async function ProjectDetailPage({
   }
 
   const steps = await getProjectSteps(project.id)
+  const deliverables = await getProjectDeliverables(project.id)
 
   const canArchive = canTransition(project.status, 'Archivé')
   const isArchived = project.status === 'Archivé'
@@ -104,9 +108,11 @@ export default async function ProjectDetailPage({
             Aucune étape rattachée à ce projet.
           </p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {steps.map((step) => {
               const badgeStyle = getStatusBadgeStyle(step.status)
+              const stepDeliverables = deliverables.filter((d) => d.step_id === step.id)
+
               return (
                 <div
                   key={step.id}
@@ -143,11 +149,31 @@ export default async function ProjectDetailPage({
                       <StepStatusButton stepId={step.id} currentStatus={step.status} />
                     </div>
                   </div>
+
                   {step.description && (
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#555' }}>
+                    <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.85rem', color: '#555' }}>
                       {step.description}
                     </p>
                   )}
+
+                  {/* Sous-section Livrables rattachés à cette étape */}
+                  <div
+                    style={{
+                      marginTop: '0.75rem',
+                      paddingTop: '0.75rem',
+                      borderTop: '1px dashed #e0e0e0',
+                    }}
+                  >
+                    <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#444' }}>
+                      Livrables ({stepDeliverables.length})
+                    </div>
+
+                    {stepDeliverables.map((deliv) => (
+                      <DeliverableItem key={deliv.id} deliverable={deliv} />
+                    ))}
+
+                    <AddDeliverableForm stepId={step.id} />
+                  </div>
                 </div>
               )
             })}
