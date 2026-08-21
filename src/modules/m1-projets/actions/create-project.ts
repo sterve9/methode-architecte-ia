@@ -6,16 +6,17 @@
  * Chaîne :
  * 1. Vérifie que l'utilisateur est authentifié.
  * 2. Valide les inputs du formulaire (name + business_problem).
- * 3. Insère dans la table projects (user_id injecté côté serveur).
+ * 3. Appelle la RPC PostgreSQL create_project_with_steps.
+ *    - Crée le projet lié à l'utilisateur courant (auth.uid()).
+ *    - Clone atomiquement les 13 étapes du canevas v1.0 dans method_steps.
  * 4. Invalide le cache de la liste des projets.
- * 5. Redirige vers /dashboard/projects (feedback visuel : le projet apparaît).
+ * 5. Redirige vers /dashboard/projects.
  *
  * En cas d'erreur : redirige vers /dashboard/projects/new avec ?error=...
  *
  * Sécurité :
- * - user_id vient de auth.getUser() côté serveur (jamais du formulaire).
- * - La policy RLS projects_insert_own vérifie que user_id = auth.uid().
- * - Défense en profondeur : validation appli + RLS DB.
+ * - L'identité utilisateur est résolue par auth.uid() dans la fonction RPC.
+ * - Transaction atomique PostgreSQL (DT-Lot3-04).
  */
 
 import { revalidatePath } from 'next/cache'
@@ -71,16 +72,10 @@ export async function createProject(formData: FormData): Promise<void> {
     redirect('/login')
   }
 
-  // 4. Insertion en base
-  //    Les valeurs par défaut SQL prennent en charge :
-  //    - id (gen_random_uuid)
-  //    - status ('Idée')
-  //    - start_date (CURRENT_DATE)
-  //    - created_at / updated_at (now())
-  const { error } = await supabase.from('projects').insert({
-    user_id: user.id,
-    name,
-    business_problem: businessProblem,
+  // 4. Insertion atomique via la RPC PL/pgSQL (Projet + 13 Étapes du canevas)
+  const { error } = await supabase.rpc('create_project_with_steps', {
+    p_name: name,
+    p_business_problem: businessProblem,
   })
 
   if (error) {

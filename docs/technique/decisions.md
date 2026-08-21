@@ -408,6 +408,27 @@ Si à ce moment la valeur reste floue pour l'utilisateur, la priorité devra bas
 
 ---
 
+### DT-Lot3-04 — Clonage atomique des étapes par fonction RPC PostgreSQL
+
+**Statut** : Validé
+**Date** : S17 (2026-08-21)
+
+**Contexte** : La création d'un projet doit entraîner le clonage immédiat des 13 étapes du canevas de la version active (`is_active = true`). Deux opérations d'écriture séparées côté application (`INSERT projects` puis `INSERT method_steps`) risqueraient de laisser un projet orphelin sans étapes en cas de panne réseau ou de crash du serveur entre les deux requêtes. Supabase JS ne proposant pas de transaction multi-requêtes côté client, il faut garantir l'atomicité de la création au niveau de la base de données.
+
+**Décision** : Créer une fonction PL/pgSQL RPC (`create_project_with_steps`) dans une migration SQL. Cette fonction effectue l'insertion du projet ET le clonage des étapes associées au sein d'une transaction PostgreSQL unique. L'action Next.js `createProject` utilisera un appel unique `supabase.rpc('create_project_with_steps', ...)`.
+
+**Alternatives envisagées** :
+- **Atomicité applicative avec rollback manuel** — écarté : complexe, verbeux, et peu fiable si l'échec réseau survient au moment de la tentative de rollback.
+- **Requêtes clients séparées sans transaction** — écarté : viole l'invariant métier selon lequel tout projet possède ses 13 étapes à la naissance.
+
+**Conséquences** :
+- Création d'une migration SQL hébergeant la fonction `create_project_with_steps`.
+- La fonction RPC prend en charge la récupération de la version active, la création du projet avec le `user_id` de la session (`auth.uid()`), et le clonage via `INSERT INTO method_steps ... SELECT`.
+- La Server Action `src/modules/m1-projets/actions/create-project.ts` est mise à jour pour consommer la RPC.
+- GRANT explicite `GRANT EXECUTE ON FUNCTION create_project_with_steps TO authenticated` pour respecter la sécurité RLS/permissions.
+
+---
+
 ## Convention de mise à jour
 
 - Une décision figée ne se **supprime jamais** : on la marque `Déprécié` ou `Remplacée par DT-YY`.
