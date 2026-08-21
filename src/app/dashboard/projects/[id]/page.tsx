@@ -1,7 +1,10 @@
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { getProjectById } from '@/modules/m1-projets/queries/get-project-by-id';
-import { canTransition } from '@/modules/m1-projets/domain/transitions';
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+
+import { canTransition } from '@/modules/m1-projets/domain/transitions'
+import { getProjectById } from '@/modules/m1-projets/queries/get-project-by-id'
+import { getProjectSteps } from '@/modules/m2-methode/queries/get-project-steps'
+import { MethodStepStatus } from '@/modules/m2-methode/types'
 
 /**
  * Page détail d'un projet.
@@ -10,35 +13,49 @@ import { canTransition } from '@/modules/m1-projets/domain/transitions';
  *
  * Comportement :
  * - 404 si projet inexistant ou appartenant à un autre user (RLS)
- * - Affichage lecture seule
+ * - Affichage lecture seule du projet et de ses étapes de méthode
  * - Bouton "Modifier" toujours visible
- * - Bouton "Archiver" visible uniquement si la transition vers Archivé
- *   est autorisée depuis le statut actuel (T6, T7, T8)
- * - Si projet archivé : affichage de la raison d'archivage
+ * - Bouton "Archiver" visible uniquement si la transition vers Archivé est autorisée
+ * - Affichage des 13 étapes clonées de la méthode
  */
+
+function getStatusBadgeStyle(status: MethodStepStatus) {
+  switch (status) {
+    case 'Terminée':
+      return { background: '#e8f5e9', color: '#2e7d32', border: '1px solid #c8e6c9' }
+    case 'En cours':
+      return { background: '#fff8e1', color: '#b78103', border: '1px solid #ffe082' }
+    case 'À faire':
+    default:
+      return { background: '#f5f5f5', color: '#616161', border: '1px solid #e0e0e0' }
+  }
+}
+
 export default async function ProjectDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string }>
 }) {
-  const { id } = await params;
-  const project = await getProjectById(id);
+  const { id } = await params
+  const project = await getProjectById(id)
 
   if (!project) {
-    notFound();
+    notFound()
   }
 
-  const canArchive = canTransition(project.status, 'Archivé');
-  const isArchived = project.status === 'Archivé';
+  const steps = await getProjectSteps(project.id)
+
+  const canArchive = canTransition(project.status, 'Archivé')
+  const isArchived = project.status === 'Archivé'
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleString('fr-FR', {
       dateStyle: 'long',
       timeStyle: 'short',
-    });
+    })
 
   return (
-    <main style={{ padding: '2rem', maxWidth: '720px', margin: '0 auto' }}>
+    <main style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
       <nav style={{ marginBottom: '1.5rem' }}>
         <Link href="/dashboard/projects">← Retour à la liste</Link>
       </nav>
@@ -82,6 +99,65 @@ export default async function ProjectDetailPage({
         </section>
       )}
 
+      {/* Section M2 - Étapes de la méthode */}
+      <section style={{ marginBottom: '2.5rem' }}>
+        <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>
+          Étapes de la Méthode ({steps.length})
+        </h2>
+
+        {steps.length === 0 ? (
+          <p style={{ color: '#888', fontStyle: 'italic' }}>
+            Aucune étape rattachée à ce projet.
+          </p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {steps.map((step) => {
+              const badgeStyle = getStatusBadgeStyle(step.status)
+              return (
+                <div
+                  key={step.id}
+                  style={{
+                    padding: '1rem',
+                    border: '1px solid #eaeaea',
+                    borderRadius: '8px',
+                    background: '#fafafa',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '0.4rem',
+                    }}
+                  >
+                    <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>
+                      {step.step_order}. {step.title}
+                    </span>
+                    <span
+                      style={{
+                        padding: '0.15rem 0.5rem',
+                        borderRadius: '4px',
+                        fontSize: '0.8rem',
+                        fontWeight: '500',
+                        ...badgeStyle,
+                      }}
+                    >
+                      {step.status}
+                    </span>
+                  </div>
+                  {step.description && (
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#555' }}>
+                      {step.description}
+                    </p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </section>
+
       <section
         style={{
           marginBottom: '2rem',
@@ -123,5 +199,5 @@ export default async function ProjectDetailPage({
         )}
       </div>
     </main>
-  );
+  )
 }
