@@ -5,18 +5,12 @@ import { canTransition } from '@/modules/m1-projets/domain/transitions'
 import { getProjectById } from '@/modules/m1-projets/queries/get-project-by-id'
 import { getProjectSteps } from '@/modules/m2-methode/queries/get-project-steps'
 import { MethodStepStatus } from '@/modules/m2-methode/types'
+import { StepStatusButton } from '@/modules/m2-methode/ui/step-status-button'
 
 /**
  * Page détail d'un projet.
  *
  * Route : /dashboard/projects/[id]
- *
- * Comportement :
- * - 404 si projet inexistant ou appartenant à un autre user (RLS)
- * - Affichage lecture seule du projet et de ses étapes de méthode
- * - Bouton "Modifier" toujours visible
- * - Bouton "Archiver" visible uniquement si la transition vers Archivé est autorisée
- * - Affichage des 13 étapes clonées de la méthode
  */
 
 function getStatusBadgeStyle(status: MethodStepStatus) {
@@ -134,17 +128,20 @@ export default async function ProjectDetailPage({
                     <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>
                       {step.step_order}. {step.title}
                     </span>
-                    <span
-                      style={{
-                        padding: '0.15rem 0.5rem',
-                        borderRadius: '4px',
-                        fontSize: '0.8rem',
-                        fontWeight: '500',
-                        ...badgeStyle,
-                      }}
-                    >
-                      {step.status}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <span
+                        style={{
+                          padding: '0.15rem 0.5rem',
+                          borderRadius: '4px',
+                          fontSize: '0.8rem',
+                          fontWeight: '500',
+                          ...badgeStyle,
+                        }}
+                      >
+                        {step.status}
+                      </span>
+                      <StepStatusButton stepId={step.id} currentStatus={step.status} />
+                    </div>
                   </div>
                   {step.description && (
                     <p style={{ margin: 0, fontSize: '0.85rem', color: '#555' }}>
