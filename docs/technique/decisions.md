@@ -434,3 +434,56 @@ Si à ce moment la valeur reste floue pour l'utilisateur, la priorité devra bas
 - Une décision figée ne se **supprime jamais** : on la marque `Déprécié` ou `Remplacée par DT-YY`.
 - Une nouvelle décision remplaçant une ancienne cite explicitement le code de l'ancienne.
 - Les décisions sont **rétrospectives** : on documente ce qui a été décidé, pas ce qu'on projette de décider.
+
+---
+
+### DT-Lot4-01 — Modèle de données Preuve publique (`public_proofs`)
+
+- **Date :** 21/08/2026
+- **Statut :** Accepté
+- **Contexte :**
+  Le Lot 4 introduit le module M3 (Preuves publiques), dont le but est de transformer un travail méthodologique interne (Livrables M2 à l'état `Publié`) en vitrine publique de compétence.
+- **Décisions :**
+  1. **Table SQL :** Création de la table `public_proofs` dans Supabase (conforme au plan `11.Plan_Implementation.md`).
+  2. **Cardinalité MVP :** 1 Preuve publique est rattachée à **1 Livrable source principal** (`deliverable_id` comme clé étrangère `NOT NULL`). L'extension vers N livrables sources via table de jonction est différée post-MVP.
+  3. **Identifiant public :** Utilisation d'un `slug` unique (`VARCHAR NOT NULL UNIQUE`) pour générer des URL lisibles et partageables (`/p/[slug]`).
+  4. **Cycle de vie :** Champ `status` restreint aux valeurs `'brouillon'`, `'publié'`, `'archivé'`.
+- **Conséquences :**
+  - Validation applicative stricte : un Livrable ne peut être sélectionné comme source que s'il est à l'état `'Publié'` (`SL2`).
+  - Interface de création simplifiée et rapide pour la publication d'une preuve.
+
+---
+
+### DT-Lot4-02 — Surface d'exposition publique M7 & Sécurité RLS
+
+- **Date :** 21/08/2026
+- **Statut :** Accepté
+- **Contexte :**
+  Les preuves publiques doivent être consultables par des recruteurs, prospects ou visiteurs venant de réseaux sociaux (LinkedIn, TikTok) sans nécessiter d'authentification.
+- **Décisions :**
+  1. **Routes publiques :**
+     - `/p` : Index portfolio listant toutes les preuves publiées.
+     - `/p/[slug]` : Fiche détaillée "Récit de compétence" d'une preuve publique.
+  2. **Politique RLS Supabase (Row Level Security) :**
+     - **Lecture publique (anon) :** Autorisée uniquement sur la table `public_proofs` où `status = 'publié'`.
+     - **Écriture / Modification (authenticated) :** Réservée à l'utilisateur connecté propriétaire du projet.
+  3. **Gestion des états fermés :** Toute requête anonyme vers une preuve en `brouillon` ou `archivé` doit retourner un code HTTP 404 (Not Found) sans divulguer l'existence de la ressource.
+- **Conséquences :**
+  - Étanchéité totale des données privées (projets, étapes, livrables non publiés restent invisibles au public).
+  - Intégration parfaite du responsive mobile pour la consultation via bio TikTok ou lien LinkedIn.
+
+---
+
+### DT-Lot4-03 — URL Canonique & Préparation au sous-domaine `sterveshop.cloud`
+
+- **Date :** 21/08/2026
+- **Statut :** Accepté
+- **Contexte :**
+  L'application est hébergée sur Vercel (`methode-architecte-ia.vercel.app`), mais un sous-domaine personnalisé dédié (ex: `[sous-domaine].sterveshop.cloud`) sera configuré à terme.
+- **Décisions :**
+  1. La base de données ne stocke jamais d'URL absolue dans `public_proofs` (uniquement le `slug`).
+  2. La route publique relative est figée sous le motif `/p/[slug]`.
+  3. La construction des URL absolues partagées (OpenGraph, boutons "Copier le lien") est effectuée au runtime en se basant sur le header `Host` ou les variables d'environnement Vercel/Next.js.
+- **Conséquences :**
+  - Migration vers le sous-domaine `sterveshop.cloud` transparente et sans aucune modification en base de données.
+  - Garantie de liens valides quel que soit l'environnement (développement local, prévisualisation, production).
