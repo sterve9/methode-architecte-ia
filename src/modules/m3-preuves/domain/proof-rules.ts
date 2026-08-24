@@ -24,8 +24,9 @@ export function canTransitionProofStatus(
 
 /**
  * Vérifie si un livrable est éligible pour créer une preuve publique.
- * Règle métier : Le livrable source doit être au statut 'publié' (ou 'publie').
+ * Aligné M2 : statut livrable = 'Publié' (voir DeliverableStatus).
  */
 export function isDeliverableEligibleForProof(deliverableStatus: string): boolean {
-  return deliverableStatus === 'publié' || deliverableStatus === 'publie';
+  const normalized = deliverableStatus.trim().toLowerCase();
+  return normalized === 'publié' || normalized === 'publie';
 }

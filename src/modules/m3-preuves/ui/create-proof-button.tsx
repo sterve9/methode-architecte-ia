@@ -35,7 +35,6 @@ export function CreateProofButton({
     }
 
     startTransition(async () => {
-      // 1. Créer la preuve en brouillon
       const result = await createProof({
         deliverable_id: deliverableId,
         title: title.trim(),
@@ -49,7 +48,6 @@ export function CreateProofButton({
         return
       }
 
-      // 2. Publier immédiatement la preuve
       const publishResult = await updateProofStatus(result.proofId, 'publié')
 
       if (!publishResult.success) {
@@ -57,19 +55,9 @@ export function CreateProofButton({
         return
       }
 
-      // Récupérer le slug généré via l'action
-      // Pour simplifier l'accès rapide dans l'UI, on calcule le slug localement
-      const slug = title
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .substring(0, 80)
-
-      setPublishedSlug(slug)
+      // Slug renvoyé par le serveur (pas de recalcul client)
+      setPublishedSlug(result.slug || null)
+      setIsOpen(false)
     })
   }
 
@@ -83,7 +71,7 @@ export function CreateProofButton({
           rel="noopener noreferrer"
           style={{ color: '#0070f3', textDecoration: 'underline' }}
         >
-          Voir la page /p/{publishedSlug} ↗
+          Voir /p/{publishedSlug} ↗
         </a>
       </div>
     )
@@ -151,63 +139,125 @@ export function CreateProofButton({
               </div>
             )}
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+            <form
+              onSubmit={handleSubmit}
+              style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}
+            >
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '0.2rem' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.8rem',
+                    fontWeight: 'bold',
+                    marginBottom: '0.2rem',
+                  }}
+                >
                   Titre du Récit
                 </label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  style={{
+                    width: '100%',
+                    padding: '0.4rem',
+                    fontSize: '0.85rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                  }}
                   required
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '0.2rem' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.8rem',
+                    fontWeight: 'bold',
+                    marginBottom: '0.2rem',
+                  }}
+                >
                   Format de preuve
                 </label>
                 <select
                   value={format}
                   onChange={(e) => setFormat(e.target.value)}
-                  style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  style={{
+                    width: '100%',
+                    padding: '0.4rem',
+                    fontSize: '0.85rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                  }}
                 >
                   <option value="Récit de compétence">Récit de compétence</option>
-                  <option value="Cas d'usage">Cas d'usage</option>
+                  <option value="Cas d'usage">Cas d&apos;usage</option>
                   <option value="Livrable technique">Livrable technique</option>
                   <option value="Démonstrateur AI">Démonstrateur AI</option>
                 </select>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '0.2rem' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.8rem',
+                    fontWeight: 'bold',
+                    marginBottom: '0.2rem',
+                  }}
+                >
                   Résumé / Valeur apportée
                 </label>
                 <textarea
                   value={summary}
                   onChange={(e) => setSummary(e.target.value)}
                   rows={3}
-                  style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  style={{
+                    width: '100%',
+                    padding: '0.4rem',
+                    fontSize: '0.85rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                  }}
                   required
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '0.2rem' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.8rem',
+                    fontWeight: 'bold',
+                    marginBottom: '0.2rem',
+                  }}
+                >
                   Contexte & Méthodologie (Optionnel)
                 </label>
                 <textarea
                   value={context}
                   onChange={(e) => setContext(e.target.value)}
                   rows={2}
-                  placeholder="Ex: Projet réalisé sous contrainte de temps avec Next.js & Supabase..."
-                  style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  placeholder="Ex: Projet réalisé sous contrainte avec Next.js & Supabase..."
+                  style={{
+                    width: '100%',
+                    padding: '0.4rem',
+                    fontSize: '0.85rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                  }}
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: '0.5rem',
+                  marginTop: '1rem',
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
