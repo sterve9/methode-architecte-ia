@@ -17,7 +17,7 @@ export interface PublicProof {
 export interface CreateProofInput {
   deliverable_id: string;
   title: string;
-  slug: string;
+  slug?: string;
   format: string;
   summary: string;
   context?: string;

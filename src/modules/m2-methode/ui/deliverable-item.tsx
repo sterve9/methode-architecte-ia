@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { updateDeliverableStatus } from '../actions/update-deliverable-status'
 import { Deliverable } from '../types'
+import { CreateProofButton } from '@/modules/m3-preuves/ui/create-proof-button'
 
 interface DeliverableItemProps {
   deliverable: Deliverable
@@ -79,6 +80,14 @@ export function DeliverableItem({ deliverable }: DeliverableItemProps) {
         >
           {deliverable.status}
         </span>
+
+        {isPublished && (
+          <CreateProofButton
+            deliverableId={deliverable.id}
+            deliverableTitle={deliverable.title}
+            deliverableDescription={deliverable.description}
+          />
+        )}
 
         <button
           onClick={handleToggleStatus}
