@@ -354,7 +354,7 @@ Le canevas de la v1.0 est composé des **13 étapes** correspondant aux fichiers
 **Statut** : Actif
 **Date** : S16
 
-**Contexte** : les objets `Étape méthode` et `Livrable` introduits au Lot 3 n'avaient pas de cycle de vie défini (documenté comme "non couvert" dans `05.Cycle_de_Vie.md` section 7 avant S16). Il faut fixer états et transitions avant toute implémentation.
+**Contexte** : les objets `Étape méthode` et `Livrable` introduits au Lot 3 n'avaient pas de cycle de vie défini (documenté comme "non covered" dans `05.Cycle_de_Vie.md` section 7 avant S16). Il faut fixer états et transitions avant toute implémentation.
 
 **Décision** :
 
@@ -386,7 +386,7 @@ Le canevas de la v1.0 est composé des **13 étapes** correspondant aux fichiers
 
 ### DT-Lot3-03 — Point de contrôle valeur post-Lot 4
 
-**Statut** : Actif — action différée obligatoire
+**Statut** : Exécuté (S19)
 **Date** : S16
 
 **Contexte** : lors de la session de conception S16, l'utilisateur a exprimé un doute légitime sur la valeur perçue du système MVP : "je stocke des URL vers des livrables qui vivent ailleurs, où est la valeur ajoutée réelle par rapport à un Notion ?". Le doute portait notamment sur l'absence de publication automatique sur les canaux externes (LinkedIn, etc.), explicitement exclue du MVP dans `11.Plan_Implementation.md` section 6.
@@ -401,10 +401,7 @@ Si à ce moment la valeur reste floue pour l'utilisateur, la priorité devra bas
 - **Ignorer le doute et poursuivre sans point de contrôle** — écarté : le doute est légitime et documenté, l'ignorer serait construire à l'aveugle.
 
 **Conséquences** :
-- À la clôture du Lot 4, une séance de session commence obligatoirement par la question : "après avoir vécu le Lot 4, la valeur perçue du système est-elle claire ou toujours floue ?".
-- Si la réponse est "claire" → poursuite normale vers Lot 5.
-- Si la réponse est "floue" → nouvelle DT écrite pour introduire la piste "génération assistée de contenu" (probablement `DT-Lot4bis-01` ou équivalent), avec re-priorisation explicite du Lot 5.
-- Cette décision est de nature **méta** (pilotage produit) et non technique pure. Elle est placée dans `decisions.md` pour être trouvable et audit-able.
+- À la clôture du Lot 4, le point de contrôle a été exécuté. Le constat est que la valeur reste floue tant que l'UX est brute et les données factices. Décision formalisée dans `DT-Lot4-04`.
 
 ---
 
@@ -413,7 +410,7 @@ Si à ce moment la valeur reste floue pour l'utilisateur, la priorité devra bas
 **Statut** : Validé
 **Date** : S17 (2026-08-21)
 
-**Contexte** : La création d'un projet doit entraîner le clonage immédiat des 13 étapes du canevas de la version active (`is_active = true`). Deux opérations d'écriture séparées côté application (`INSERT projects` puis `INSERT method_steps`) risqueraient de laisser un projet orphelin sans étapes en cas de panne réseau ou de crash du serveur entre les deux requêtes. Supabase JS ne proposant pas de transaction multi-requêtes côté client, il faut garantir l'atomicité de la création au niveau de la base de données.
+**Contexte** : La création d'un projet doit entraîner le clonage immédiat des 13 étapes du canevas de la version active (`is_active = true`). Deux opérations d'écriture séparées côté application (`INSERT projects` puis `INSERT method_steps`) risquerait de laisser un projet orphelin sans étapes en cas de panne réseau ou de crash du serveur entre les deux requêtes. Supabase JS ne proposant pas de transaction multi-requêtes côté client, il faut garantir l'atomicité de la création au niveau de la base de données.
 
 **Décision** : Créer une fonction PL/pgSQL RPC (`create_project_with_steps`) dans une migration SQL. Cette fonction effectue l'insertion du projet ET le clonage des étapes associées au sein d'une transaction PostgreSQL unique. L'action Next.js `createProject` utilisera un appel unique `supabase.rpc('create_project_with_steps', ...)`.
 
@@ -487,3 +484,22 @@ Si à ce moment la valeur reste floue pour l'utilisateur, la priorité devra bas
 - **Conséquences :**
   - Migration vers le sous-domaine `sterveshop.cloud` transparente et sans aucune modification en base de données.
   - Garantie de liens valides quel que soit l'environnement (développement local, prévisualisation, production).
+
+---
+
+### DT-Lot4-04 — Crash Test Contenu Réel & Polissage UX de la Surface Publique avant le Lot 5
+
+- **Date :** 24/08/2026
+- **Statut :** Accepté
+- **Contexte :**
+  Suite au point de contrôle obligatoire fixé par `DT-Lot3-03` à la clôture du Lot 4, la valeur perçue du système a été évaluée. Bien que la chaîne technique M3/M7 (création de preuve, publication et restitution sur `/p/[slug]`) soit 100 % opérationnelle et validée par le tag `v0.6.0-lot4`, la valeur métier démontrable reste floue pour l'utilisateur. Les raisons identifiées sont l'absence de polissage UX/UI sur la vitrine publique et l'utilisation exclusive de données factices minimales lors des tests.
+- **Décisions :**
+  1. **Pause UX & Contenu avant le Lot 5 :** Suspendre le démarrage du Lot 5 pour consacrer la Séance 20 (S20) au polissage de la surface d'exposition publique (`/p` et `/p/[slug]`) et à un crash-test sur du contenu réel.
+  2. **Design "Studio / Substack-Medium" :** Transforme la fiche de preuve `/p/[slug]` en une étude de cas professionnelle et élégante (cartes retravaillées, typographie soignée, badges de certification, boutons de partage LinkedIn/X).
+  3. **Crash-Test Contenu Réel :** Injecter un projet d'architecture IA complet doté de vrais textes métier et de vrais livrables pour éprouver l'impact émotionnel et professionnel du Récit de Compétence.
+- **Alternatives envisagées :**
+  - *Passer immédiatement au Lot 5 sans retoucher l'UX* — écarté : risque de construire un système techniquement complexe mais sans valeur perçue par l'utilisateur final.
+  - *Refonte globale du Dashboard en Tailwind* — écarté : effort trop vaste ; la priorité absolue va à la vitrine publique anonyme qui porte la promesse d'exposition de compétence.
+- **Conséquences :**
+  - Le démarrage du Lot 5 est décalé à la Séance 21 (S21).
+  - La S20 produira une vitrine publique hautement crédible, esthétique et directement partageable.
