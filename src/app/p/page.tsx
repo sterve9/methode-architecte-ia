@@ -30,13 +30,13 @@ export default async function PublicPortfolioPage() {
               borderRadius: '999px',
             }}
           >
-            Portfolio d'Architecture IA
+            Portfolio d&apos;Architecture IA
           </span>
           <h1 style={{ fontSize: '2rem', fontWeight: '800', color: '#0f172a', marginTop: '0.75rem' }}>
             Récits de Compétences & Preuves
           </h1>
           <p style={{ color: '#475569', fontSize: '1rem', maxWidth: '600px', margin: '0.5rem auto 0' }}>
-            Démonstrateurs, livrables techniques et cas d'usage conçus et validés selon la Méthode Architecte IA.
+            Démonstrateurs, livrables techniques et cas d&apos;usage conçus et validés selon la Méthode Architecte IA.
           </p>
         </header>
 
@@ -52,7 +52,7 @@ export default async function PublicPortfolioPage() {
             }}
           >
             <p style={{ color: '#64748b', fontSize: '0.95rem', margin: 0 }}>
-              Aucune preuve publique n'a été publiée pour le moment.
+              Aucune preuve publique n&apos;a été publiée pour le moment.
             </p>
           </div>
         ) : (

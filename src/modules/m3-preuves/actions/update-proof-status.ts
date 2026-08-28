@@ -40,7 +40,7 @@ export async function updateProofStatus(
   }
 
   // 4. Mise à jour du statut
-  const updateData: Record<string, any> = { status: newStatus }
+  const updateData: { status: ProofStatus; published_at?: string } = { status: newStatus }
   if (newStatus === 'publié' && !proof.published_at) {
     updateData.published_at = new Date().toISOString()
   }
