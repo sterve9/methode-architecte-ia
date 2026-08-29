@@ -175,7 +175,7 @@ Une décision peut être **Active**, **Dépréciée** ou **Remplacée par** une 
 
 ### DT-Lot0-09 — CI = lint + build + Vitest (Playwright reste local)
 
-**Statut** : Actif
+**Statut** : Remplacée par DT-Lot5-02 (S21) — la condition posée en conséquence ci-dessous ("quand un premier test E2E métier réel existera") est remplie.
 **Date** : S9
 
 **Contexte** : le pipeline CI GitHub Actions doit garantir la qualité minimale avant chaque merge sur `main`, sans exploser le temps d'exécution ni la complexité de config.
@@ -503,3 +503,64 @@ Si à ce moment la valeur reste floue pour l'utilisateur, la priorité devra bas
 - **Conséquences :**
   - Le démarrage du Lot 5 est décalé à la Séance 21 (S21).
   - La S20 produira une vitrine publique hautement crédible, esthétique et directement partageable.
+
+---
+
+### DT-Lot5-01 — Révision méthode préalable au Lot 5 : contrats manquants et rattachement Mesure/Événement
+
+- **Date :** 29/08/2026
+- **Statut :** Accepté
+- **Contexte :**
+  Avant de démarrer le Lot 5 (Instrumentation), une relecture complète de `07.Contrats.md` et `08.Architecture.md` a révélé deux incohérences documentées entre fiches méthode : (1) le flux F8 (M3 Preuves → M7 Consultation) listé dans `08.Architecture.md` ne correspondait à aucun contrat dans `07.Contrats.md` — c'est la cause documentée de l'entorse actuelle du code (`src/app/p/` qui lit directement les queries de M3 au lieu de passer par un module M7) ; (2) les 4 événements clés attendus par le Lot 5 (`11.Plan_Implementation.md`) — projet créé, étape terminée, livrable attaché, preuve publiée — n'étaient couverts que partiellement par les contrats existants alimentant C5 (CT-04 pour les projets, CT-05 pour la diffusion, hors MVP). Il fallait aussi trancher si la table technique `events` du Lot 5 justifiait un nouvel objet métier "Événement", alors que la liste des 10 objets métier de `03.Objets_Metier.md` est explicitement figée depuis la Phase 1.
+- **Décisions :**
+  1. **Pas de nouvel objet métier.** La table `events` est l'implémentation technique (Phase 3) du concept déjà couvert par l'objet métier "Mesure" (fiche 6 de `03.Objets_Metier.md`, figée en Phase 1). Aucune modification de la liste des 10 objets métier.
+  2. **Ajout du contrat CT-09 (C3 → C7)** dans `07.Contrats.md` : "Exposer une preuve publique", comblant le flux F8 qui n'avait jamais eu de contrat formel.
+  3. **Ajout des contrats CT-10 (C2 → C5) et CT-11 (C3 → C5)** dans `07.Contrats.md`, couvrant respectivement "étape terminée / livrable attaché" et "preuve publiée" — les 2 événements du Lot 5 qui n'avaient aucun contrat. L'événement "projet créé" reste couvert par CT-04 existant, dont le déclencheur est clarifié comme incluant la transition initiale vers l'état `Idée`.
+  4. **Ajout de la section 6 dans `08.Architecture.md`** renvoyant vers `CLAUDE.md` comme source normative de la convention de dossier `src/modules/mX-nom/` (domain/actions/queries/ui/types.ts), absente de la méthode jusqu'ici.
+  5. **Ajout des flux F9 (M2 → M5) et F10 (M3 → M5)** dans le tableau de `08.Architecture.md`, pour refléter CT-10/CT-11.
+- **Alternatives envisagées :**
+  - *Ajouter "Événement" comme 11e objet métier* — écarté : rouvre une décision de Phase 1 (liste figée) pour un besoin qui est en réalité une implémentation technique de "Mesure", déjà couverte en Phase 1.
+  - *Corriger uniquement le code (créer M7, ajouter les émissions d'événements) sans toucher aux fiches méthode* — écarté : violerait la règle RM-03 (`13.Documentation.md`) selon laquelle la documentation méthode n'évolue que par révision explicite, jamais au fil de l'implémentation.
+- **Conséquences :**
+  - Le flux F8 et les 4 événements du Lot 5 ont désormais une base contractuelle explicite avant tout code.
+  - Le flux F6 (M6 → M1, "création d'une mission associée") reste sans contrat correspondant dans `07.Contrats.md` — gap analogue mais côté M6, hors MVP, non traité par cette décision.
+  - Le Lot 5 (Instrumentation) et la formalisation de M7 Consultation peuvent maintenant être conçus sans improviser de spec en cours de route.
+
+---
+
+### DT-Lot5-02 — Câblage de Playwright en CI et résolution du test E2E obligatoire du Lot 4
+
+- **Date :** 29/08/2026
+- **Statut :** Accepté — remplace `DT-Lot0-09`
+- **Contexte :**
+  `DT-Lot0-09` acceptait explicitement l'absence de Playwright en CI "jusqu'à un premier test E2E métier réel". Ce moment est arrivé : `12.Strategie_Tests.md` §8 impose un test E2E obligatoire pour le Lot 4 (parcours complet Projet → Étape → Livrable → Preuve publique consultée sans authentification), qui n'avait jamais été écrit malgré le tag `v0.6.0-lot4`. PT-05 impose par ailleurs que ce test soit automatisé en CI, pas seulement en local.
+- **Décisions :**
+  1. **Écriture de `e2e/chaine-critique.spec.ts`**, couvrant tous les éléments obligatoires de `12.Strategie_Tests.md` §4 sauf l'enregistrement des 4 événements dans la table `events` (Lot 5, pas encore construit — le test sera étendu à ce moment).
+  2. **`dotenv` ajouté en devDependency** : Playwright ne charge pas `.env.local` automatiquement contrairement à Next.js ; sans ça, les identifiants de test restent invisibles au process de test (`playwright.config.ts`).
+  3. **Identifiants de test = l'utilisateur unique de l'app** (`E2E_USER_EMAIL`/`E2E_USER_PASSWORD`), pas un compte séparé — cohérent avec `DT-Lot1-01` (pas de multi-user, pas de seed dédié).
+  4. **Nettoyage par archivage** : le test crée un projet réel préfixé `[E2E]` et l'archive lui-même en fin de parcours (pas de suppression physique possible, `DT-Lot2-01`).
+  5. **Playwright ajouté à `.github/workflows/ci.yml`**, sur le même déclencheur que le reste de la CI (push + PR sur `main`). Secrets GitHub Actions requis : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD`.
+- **Alternatives envisagées :**
+  - *Provisionner un environnement Supabase de test séparé* — écarté : nouvelle infra à maintenir pour un projet solo dev, contraire à PT-06/PD-06.
+  - *Ne pas câbler Playwright en CI, garder la vérification uniquement locale avant push* — écarté : viole PT-05 ("aucun test critique ne repose sur une vérification manuelle") et l'exit condition correspondante de `12.Strategie_Tests.md` §9.
+- **Conséquences :**
+  - Chaque push et chaque PR sur `main` crée puis archive désormais un projet `[E2E]` réel dans la base de production — accepté comme coût du choix "pas d'environnement de test séparé".
+  - Le critère de sortie test du Lot 4 (`12.Strategie_Tests.md` §8) est maintenant rempli, à l'exception de la vérification des événements (dépend du Lot 5).
+  - `docs/technique/deploiement.md` et `tests.md` mis à jour en conséquence.
+
+---
+
+### DT-Lot5-03 — Confirmation du périmètre Lot 5 = Instrumentation ; pivot DT-Lot3-03 non déclenché
+
+- **Date :** 29/08/2026
+- **Statut :** Accepté
+- **Contexte :**
+  `DT-Lot3-03` posait une condition explicite : si la valeur perçue du système reste floue après le point de contrôle de fin de Lot 4, la priorité doit basculer vers la génération assistée de contenu IA plutôt que sur le Lot 5 (Instrumentation). Le point de contrôle a eu lieu (`DT-Lot4-04`, S20) et le bilan de fin de séance a conclu à une valeur perçue "déjà un peu présente — positif mais partiel", pas un rejet franc. Le prompt de reprise S21 avait par ailleurs redéfini, sans decision écrite, "Lot 5" comme couvrant M4 Diffusion + M5 Mesures + M6 Missions + M7 Consultation réunis — perimetre qui ne correspondait ni au plan officiel (`11.Plan_Implementation.md`, Lot 5 = Instrumentation seule) ni à la piste ouverte par `DT-Lot3-03` (génération de contenu, pas M4/M6 complets). Il fallait donc trancher explicitement avant toute construction.
+- **Décision :**
+  Le verdict "positif mais partiel" de fin de Lot 4 est jugé insuffisant pour déclencher le pivot prévu par `DT-Lot3-03` (qui visait un cas de valeur restée franchement floue). Le Lot 5 (Instrumentation) est donc confirmé comme prochain chantier, conformément au plan officiel — sa base contractuelle et documentaire vient d'être posée (`DT-Lot5-01`, `DT-Lot5-02`). M4 Diffusion et M6 Missions restent hors MVP (`11.Plan_Implementation.md` §6), sans decision qui les rouvre. Le pivot `DT-Lot3-03` (génération de contenu IA) reste une option disponible, à réévaluer après clôture du Lot 5 si le besoin se représente.
+- **Alternatives envisagées :**
+  - *Activer le pivot DT-Lot3-03 maintenant* — écarté : le verdict S20 n'est pas le cas de flou franc que la décision anticipait.
+  - *Suivre la définition élargie du prompt de reprise S21 (M4+M5+M6+M7)* — écarté : aurait rouvert M4/M6 hors MVP sans decision explicite, en violation de P-04 (`11.Plan_Implementation.md`).
+- **Conséquences :**
+  - Le Lot 5 (Instrumentation) démarre sur la base posée par `DT-Lot5-01`/`DT-Lot5-02`, sans ambiguïté de périmètre.
+  - Cette décision sert de référence pour tout futur prompt de reprise qui redéfinirait "Lot 5" différemment du plan officiel.
