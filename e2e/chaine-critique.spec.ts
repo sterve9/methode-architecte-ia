@@ -8,10 +8,11 @@ import { test, expect } from '@playwright/test'
  * Livrable → publication du Livrable → transformation en Preuve publique
  * → consultation de la Preuve sans authentification.
  *
- * Non couvert ici : l'enregistrement des 4 événements clés dans la table
- * `events` (12.Strategie_Tests.md §4 les inclut dans la chaîne critique),
- * car cette table n'existe pas encore — elle est l'objet du Lot 5
- * (voir decisions.md, DT-Lot5-01). Ce test sera étendu à ce moment-là.
+ * → puis vérification des 4 événements clés enregistrés dans la table `events`
+ * (12.Strategie_Tests.md §4 les inclut dans la chaîne critique). C'est la
+ * seule preuve que recordEvent() écrit vraiment en base : les tests unitaires
+ * d'émission ne vérifient que l'appel, avec un double de Supabase — leçon
+ * de la S22 reprise par DT-Lot5-09.
  *
  * Nécessite E2E_USER_EMAIL et E2E_USER_PASSWORD dans .env.local, pointant
  * vers l'unique utilisateur du système (DT-Lot1-01 — pas de seed dédié).
@@ -21,6 +22,12 @@ import { test, expect } from '@playwright/test'
  * lui-même en toute fin de parcours (pas de suppression physique possible
  * par conception, DT-Lot2-01). La preuve publiée est retirée séparément de
  * la vitrine : archiver le projet ne l'en retire pas (DT-Lot5-05).
+ *
+ * Les événements produits, eux, ne sont PAS nettoyables : le journal est
+ * append-only par conception. Ils restent en base et sont écartés à la
+ * lecture par la vue de consultation, sur le préfixe "[E2E]" du nom du
+ * projet — d'où le ?tests=1 de l'étape 12, sans lequel le test ne verrait
+ * pas ses propres événements (DT-Lot5-09).
  */
 
 const E2E_EMAIL = process.env.E2E_USER_EMAIL
@@ -124,4 +131,22 @@ test('chaîne critique : Projet → Étape → Livrable → Preuve publique → 
   await page.getByRole('button', { name: 'Archiver définitivement' }).click()
   await expect(page).toHaveURL(projectUrl)
   await expect(page.getByText('Archivé').first()).toBeVisible()
+
+  // 12. Les 4 événements clés ont bien été écrits en base (Lot 5).
+  //     Placé APRÈS le nettoyage volontairement : si cette assertion échoue,
+  //     le projet et la preuve de test ont déjà été retirés.
+  //     ?tests=1 lève le filtre qui écarte les projets "[E2E]" de la cadence.
+  await page.goto('/dashboard/mesures?tests=1')
+
+  const projectEvents = page.getByTestId('event-row').filter({ hasText: projectName })
+  await expect(projectEvents).toHaveCount(4)
+
+  for (const eventType of [
+    'Projet créé',
+    'Étape terminée',
+    'Livrable attaché',
+    'Preuve publiée',
+  ]) {
+    await expect(projectEvents.filter({ hasText: eventType })).toHaveCount(1)
+  }
 })
