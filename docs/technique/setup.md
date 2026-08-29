@@ -62,6 +62,11 @@ text
 
 NEXT_PUBLIC_SUPABASE_URL=https://tegcvrdejkwysrtxdvnx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<clé_publique_anon_supabase>
+ANTHROPIC_API_KEY=<clé_secrète_anthropic>
+E2E_USER_EMAIL=<email de l'utilisateur unique de l'app>
+E2E_USER_PASSWORD=<mot de passe de ce compte>
+⚠️ ANTHROPIC_API_KEY est un secret serveur (génération des posts M4, voir DT-Lot5-04) : jamais préfixé NEXT_PUBLIC_, jamais commité. Obtenu sur console.anthropic.com → Settings → API keys.
+E2E_USER_EMAIL / E2E_USER_PASSWORD servent au test E2E (voir tests.md). Sans eux, le test est ignoré et non échoué.
 Où récupérer les clés
 Les valeurs de ces variables sont stockées dans mon gestionnaire de mots de passe Google (compte sterve).
 

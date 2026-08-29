@@ -553,7 +553,7 @@ Si à ce moment la valeur reste floue pour l'utilisateur, la priorité devra bas
 ### DT-Lot5-03 — Confirmation du périmètre Lot 5 = Instrumentation ; pivot DT-Lot3-03 non déclenché
 
 - **Date :** 29/08/2026
-- **Statut :** Accepté
+- **Statut :** **Remplacée par DT-Lot5-04** (le même jour, en séance S21 — voir l'ADR pour le critère qui a changé)
 - **Contexte :**
   `DT-Lot3-03` posait une condition explicite : si la valeur perçue du système reste floue après le point de contrôle de fin de Lot 4, la priorité doit basculer vers la génération assistée de contenu IA plutôt que sur le Lot 5 (Instrumentation). Le point de contrôle a eu lieu (`DT-Lot4-04`, S20) et le bilan de fin de séance a conclu à une valeur perçue "déjà un peu présente — positif mais partiel", pas un rejet franc. Le prompt de reprise S21 avait par ailleurs redéfini, sans decision écrite, "Lot 5" comme couvrant M4 Diffusion + M5 Mesures + M6 Missions + M7 Consultation réunis — perimetre qui ne correspondait ni au plan officiel (`11.Plan_Implementation.md`, Lot 5 = Instrumentation seule) ni à la piste ouverte par `DT-Lot3-03` (génération de contenu, pas M4/M6 complets). Il fallait donc trancher explicitement avant toute construction.
 - **Décision :**
@@ -564,3 +564,65 @@ Si à ce moment la valeur reste floue pour l'utilisateur, la priorité devra bas
 - **Conséquences :**
   - Le Lot 5 (Instrumentation) démarre sur la base posée par `DT-Lot5-01`/`DT-Lot5-02`, sans ambiguïté de périmètre.
   - Cette décision sert de référence pour tout futur prompt de reprise qui redéfinirait "Lot 5" différemment du plan officiel.
+
+---
+
+### DT-Lot5-04 — Activation du pivot DT-Lot3-03 : génération assistée de posts (M4 Diffusion)
+
+- **Date :** 29/08/2026
+- **Statut :** Accepté — **remplace DT-Lot5-03**
+- **Contexte :**
+  `DT-Lot5-03`, écrite quelques heures plus tôt dans la même séance S21, concluait que le pivot `DT-Lot3-03` n'était pas déclenché et que le Lot 5 (Instrumentation) démarrait. Ce raisonnement s'appuyait sur le seul critère posé par `DT-Lot3-03` : la valeur perçue est-elle restée franchement floue après le Lot 4 ? Réponse : non ("positif mais partiel").
+
+  Un critère différent est apparu ensuite dans la séance : l'objectif explicite de **terminer sur une valeur perceptible**. Or le Lot 5 tel que défini par `11.Plan_Implementation.md` (table `events`, enregistrement de 4 événements, "consultation interne, pas de dashboard analytique") est par nature invisible — comme l'était le chantier de structuration qui venait de s'achever (`DT-Lot5-01`, `DT-Lot5-02`). Le construire aurait reproduit le problème que la séance cherchait précisément à résoudre.
+- **Décisions :**
+  1. **Le pivot `DT-Lot3-03` est activé**, non pas parce que son critère de déclenchement est rempli, mais sur un critère nouveau et assumé : produire un artefact dont la valeur se constate immédiatement. Le Lot 5 Instrumentation n'est pas annulé, il est repoussé.
+  2. **M4 Diffusion entre dans le périmètre, en diffusion *assistée* uniquement** : génération d'un brouillon de post à copier-coller. La diffusion *automatisée* (OAuth, publication via API tierce) reste explicitement hors MVP (`11.Plan_Implementation.md` §6). Cette entrée satisfait l'exigence P-04 (aucune fonctionnalité n'entre sans décision explicite).
+  3. **Implémentation du contrat CT-03 (C3 → C4)** en sous-ensemble : M3 émet la charge utile via `getProofForDiffusion`, M4 la consomme. M4 ne lit jamais `public_proofs` (respect de CA-06).
+  4. **Première intégration LLM du projet** : SDK `@anthropic-ai/sdk`, modèle `claude-opus-5`, appel côté serveur uniquement. Introduit `ANTHROPIC_API_KEY`, **première variable d'environnement secrète** du projet (jusqu'ici seules les deux clés publiques Supabase existaient) — jamais préfixée `NEXT_PUBLIC_`, lue uniquement depuis un fichier `'use server'`.
+  5. **Lien LinkedIn en premier commentaire** : le corps du post ne contient aucune URL, le lien part dans un second bloc copiable. Motif : LinkedIn réduit la portée des publications comportant un lien sortant. X conserve son lien dans le tweet (comportement propre à LinkedIn).
+  6. **Découpage post / commentaire par délimiteur** (`===PREMIER_COMMENTAIRE===`) plutôt que par structured outputs de l'API. Motif : le parseur reste une fonction pure testable sans appel réseau ni coût. Dégradation gracieuse si le délimiteur manque (tout le texte devient le corps du post).
+- **Alternatives envisagées :**
+  - *Générateur par gabarit, sans IA* — écarté : coût nul mais rendu formulaire, incapable de produire la perception de valeur recherchée.
+  - *Construire le Lot 5 Instrumentation comme prévu* — écarté : invisible par nature, aurait manqué l'objectif de la séance.
+  - *Structured outputs de l'API pour le découpage* — écarté : rend le découpage non testable hors appel réseau payant, pour un gain de robustesse marginal sur une consigne simple.
+- **Conséquences :**
+  - Le Lot 5 (Instrumentation) reste à faire et redevient le chantier suivant par défaut.
+  - Chaque génération coûte environ 0,02 $. L'appel n'est **pas** ajouté au test E2E : la CI tourne à chaque push, cela ferait payer chaque commit. Seul le domaine pur est couvert par Vitest.
+  - Constat annexe fait en chemin : la dette tsconfig décrite dans `DT-Lot1-03` (alias `@/*` pointant vers `./*`) **est en réalité déjà résolue** — le fichier contient `"@/*": ["./src/*"]` et les imports utilisent bien la forme standard `@/modules/...`.
+
+---
+
+### DT-Lot5-05 — Le test E2E polluait la vitrine publique ; ajout du retrait de preuve
+
+- **Date :** 29/08/2026
+- **Statut :** Accepté
+- **Contexte :**
+  Le test E2E introduit par `DT-Lot5-02` archive le projet qu'il crée, mais **pas la preuve publique qu'il publie**. Or `/p` liste toutes les preuves au statut `publié` indépendamment de l'état de leur projet. Conséquence constatée en production : deux fausses preuves "Livrable E2E …" étaient visibles sur le portfolio public, une par exécution (locale puis CI). Chaque push sur `main` en aurait ajouté une.
+
+  La cause profonde est un manque du Lot 4 : **aucune interface n'appelait `updateProofStatus` avec `'archivé'`**. La fonction et la transition existaient depuis `DT-Lot4-01`, mais une preuve publiée l'était définitivement — impossible de la retirer autrement qu'en SQL direct.
+- **Décisions :**
+  1. **Ajout d'un bouton "Retirer de la vitrine"** (`m3-preuves/ui/archive-proof-button.tsx`) avec confirmation, exposé sur la page `/dashboard/diffusion`. Comble le manque produit, indépendamment du test.
+  2. **Le test E2E retire sa propre preuve** avant d'archiver le projet, via ce même bouton — le nettoyage passe donc par le parcours utilisateur réel, pas par un chemin dérobé.
+  3. `updateProofStatus` invalide désormais aussi `/dashboard/diffusion`.
+- **Conséquences :**
+  - Les deux preuves E2E résiduelles ont été retirées manuellement via le nouveau bouton, ce qui a validé son fonctionnement. Vitrine vérifiée propre.
+  - Leçon à retenir pour tout futur test E2E : le nettoyage doit couvrir **chaque objet publié par le parcours**, pas seulement l'objet racine. Archiver un parent ne retire pas ses enfants des surfaces publiques.
+
+---
+
+### DT-Lot5-06 — Le proxy racine n'est pas appliqué : constat, report du traitement
+
+- **Date :** 29/08/2026
+- **Statut :** Accepté — constat, traitement reporté
+- **Contexte :**
+  En vérifiant que la vitrine est bien accessible aux visiteurs anonymes, le comportement réel s'est avéré contredire le code : `/` figure dans `PUBLIC_PATHS` mais redirige (307), `/p` n'y figure pas mais répond 200. Mesuré en production en anonyme.
+
+  Explication : `proxy.ts` est à la racine du dépôt alors que le projet utilise un dossier `src/` — Next.js l'attend à `src/proxy.ts`. Le proxy institué par `DT-Lot1-02` **n'est donc pas appliqué**. La protection des routes privées ne tient aujourd'hui que grâce aux vérifications `auth.getUser()` faites page par page, et la redirection de `/` vient de la logique propre à la page racine (commit `5e84c0f`), pas du proxy.
+- **Décision :**
+  Constater et documenter maintenant, **ne pas corriger dans cette séance** : le sujet est sécuritaire, mérite son propre chantier et sa propre vérification, et le corriger en fin de séance sans recul serait risqué.
+
+  **Piège à connaître avant toute correction** : déplacer `proxy.ts` vers `src/` sans avoir d'abord ajouté `/p` à `PUBLIC_PATHS` couperait instantanément l'accès anonyme à toute la vitrine publique.
+- **Conséquences :**
+  - Toute nouvelle page privée doit faire sa propre vérification `auth.getUser()` sans se reposer sur le proxy — c'est ce que fait `/dashboard/diffusion`.
+  - Chantier à ouvrir en priorité à la prochaine séance.

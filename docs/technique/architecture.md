@@ -58,7 +58,7 @@ Convention de dossier (normative, référencée depuis `08.Architecture.md` §6)
 | M1 Projets | `m1-projets/` | Implémenté (domain, actions, queries) |
 | M2 Méthode | `m2-methode/` | Implémenté (domain, actions, queries, ui) |
 | M3 Preuves | `m3-preuves/` | Implémenté (domain, actions, queries, ui) |
-| M4 Diffusion | `m4-diffusion/` | Coquille (`.gitkeep`) — hors MVP (`11.Plan_Implementation.md` §6) |
+| M4 Diffusion | `m4-diffusion/` | Implémenté en **diffusion assistée** (génération de brouillons de posts). La diffusion automatisée reste hors MVP (`DT-Lot5-04`) |
 | M5 Mesures | `m5-mesures/` | Coquille (`.gitkeep`) — Lot 5, en attente |
 | M6 Missions | `m6-missions/` | Coquille (`.gitkeep`) — hors MVP (`11.Plan_Implementation.md` §6) |
 | M7 Consultation | `m7-consultation/` | Coquille (`.gitkeep`) — voir dette §5 |
@@ -81,6 +81,21 @@ un exemple complet) :
 - Rafraîchissement de session : `proxy.ts` (racine du repo) délègue à
   `src/lib/supabase/middleware.ts`. Convention Next.js 16 — pas de
   `middleware.ts` (`decisions.md`, `DT-Lot1-02`).
+
+### ⚠️ Le proxy racine n'est pas appliqué
+
+Mesuré en production, en anonyme : `/` redirige alors qu'il est déclaré public,
+`/p` répond 200 alors qu'il ne l'est pas. `proxy.ts` est à la racine du dépôt
+alors que le projet utilise `src/` — Next.js l'attend à `src/proxy.ts`.
+
+**Conséquence pratique : toute page privée doit faire sa propre vérification
+`auth.getUser()`.** C'est ce que font toutes les pages du dashboard. Ne jamais
+supposer qu'une route est protégée par le proxy.
+
+**Avant de corriger** : ajouter `/p` à `PUBLIC_PATHS` *d'abord*, sinon le
+déplacement du fichier coupe l'accès anonyme à toute la vitrine publique.
+
+Détail complet et report assumé : `decisions.md`, `DT-Lot5-06`.
 
 ---
 

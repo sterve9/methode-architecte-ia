@@ -53,6 +53,18 @@ dans la table `events` — cette table n'existe pas encore, elle est
 l'objet du Lot 5 (`decisions.md`, `DT-Lot5-01`). Le test sera étendu
 à ce moment-là.
 
+**Règle de nettoyage** — le test doit retirer **chaque objet publié**
+par le parcours, pas seulement l'objet racine : archiver le projet ne
+retire pas sa preuve de la vitrine `/p`, qui liste les preuves par
+statut et non par projet. Le test archive donc explicitement la preuve
+puis le projet (`decisions.md`, `DT-Lot5-05`).
+
+**Génération de posts (M4) : volontairement hors tests automatisés.**
+L'appel à l'API Claude est payant et la CI tourne à chaque push — l'y
+inclure ferait payer chaque commit. Seul le domaine pur est couvert par
+Vitest (`buildPostPrompt`, `parsePostDraft`) ; l'appel réel se vérifie
+à la main depuis `/dashboard/diffusion`.
+
 Playwright est désormais exécuté en CI (voir §3 et `decisions.md`,
 `DT-Lot5-02`, qui remplace `DT-Lot0-09`).
 
