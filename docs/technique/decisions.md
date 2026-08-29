@@ -738,5 +738,29 @@ Si à ce moment la valeur reste floue pour l'utilisateur, la priorité devra bas
   - `update-proof-status.ts` : la lecture traverse désormais `public_proofs → deliverables → method_steps` pour obtenir le `project_id` exigé par CT-11, que `public_proofs` ne connaît pas directement.
 - **Écart connu avec CT-04 :**
   Le contrat prévoit « état de départ » et « état d'arrivée » pour **toute** transition de projet. Le périmètre du Lot 5 ne retient que « Projet créé », c'est-à-dire la transition initiale (∅ → `Idée`), déductible du type seul. Les deux colonnes seront ajoutées en migration additive le jour où les autres transitions seront instrumentées. **Ce n'est pas un oubli : c'est un refus d'extension de périmètre, tracé ici pour ne pas être redécouvert comme un bug.**
-- **Vérification :**
-  À compléter — voir la leçon de `DT-Lot5-07` : écrire `recordEvent()` et le voir compiler ne prouve rien. Les tests unitaires d'émission (`__tests__/events-emission.test.ts`) ne vérifient que l'appel, avec un double de Supabase. Seules deux mesures comptent : la lecture directe de la table `events` via l'API REST authentifiée, et l'étape 12 du test E2E de la chaîne critique.
+- **Vérification :** (30/08/2026, après application de la migration en production)
+
+  Leçon de `DT-Lot5-07` appliquée : écrire `recordEvent()` et le voir compiler ne prouve rien. Les tests unitaires d'émission (`__tests__/events-emission.test.ts`) ne vérifient que l'appel, avec un double de Supabase — ils ne sont donc pas une preuve d'écriture. Deux mesures réelles ont été faites.
+
+  **1. Frontière publique, mesurée sur l'API REST Supabase hors application :**
+
+  | Appel | Rôle | Résultat |
+  |---|---|---|
+  | `GET /rest/v1/events` | `anon` | **401** — `42501 permission denied for table events` |
+  | `POST /rest/v1/events` (forgeage) | `anon` | **401** — `42501 permission denied for table events` |
+  | `GET /rest/v1/events` | `authenticated` | **200** — `[]` |
+
+  Le refus tombe au niveau du GRANT, donc **avant** même l'évaluation de la RLS : c'est le `REVOKE ALL … FROM anon` qui répond. Critère de sortie « aucun événement privé n'est exposé publiquement » : vérifié, et vérifié deux fois (lecture *et* écriture).
+
+  **2. Écriture effective des 4 événements**, après un passage complet du test E2E de la chaîne critique (8/8 verts, dont l'étape 12), relus directement en base par la même API REST :
+
+  | `type` | `source_type` | `source_id` | `occurred_at` |
+  |---|---|---|---|
+  | Projet créé | `project` | = `project_id` | 23:03:34 |
+  | Étape terminée | `method_step` | id de l'étape | 23:03:48 |
+  | Livrable attaché | `deliverable` | id du livrable | 23:03:50 |
+  | Preuve publiée | `public_proof` | id de la preuve | 23:03:55 |
+
+  Les 4 lignes portent le même `project_id`, dans l'ordre chronologique du parcours, chacune avec le `source_type` que `sourceTypeForEvent()` lui associe. La table était vide avant le run : ces lignes ne peuvent venir que des Server Actions.
+
+  Suite complète verte : lint, build, **30 tests unitaires**, **8 tests E2E**.
