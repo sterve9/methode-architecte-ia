@@ -34,6 +34,28 @@ export interface PublicProofWithSource extends PublicProof {
   deliverable_url: string | null;
 }
 
+/**
+ * Charge utile du contrat CT-03 (C3 Preuves → C4 Diffusion).
+ *
+ * Émise par M3, consommée par M4 Diffusion : M4 ne lit jamais directement
+ * la table public_proofs (contrainte CA-06 de 08.Architecture.md).
+ *
+ * `project_name` et `project_business_problem` ne sont récupérables qu'en
+ * session authentifiée : les policies RLS anon ne donnent accès qu'aux
+ * colonnes id/title/url de deliverables (voir DT-Lot4-02).
+ */
+export interface ProofDiffusionPayload {
+  id: string;
+  title: string;
+  slug: string;
+  format: string;
+  summary: string;
+  context: string | null;
+  deliverable_url: string | null;
+  project_name: string | null;
+  project_business_problem: string | null;
+}
+
 export interface UpdateProofInput {
   title?: string;
   slug?: string;

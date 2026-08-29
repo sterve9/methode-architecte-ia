@@ -34,6 +34,13 @@ export default async function DashboardPage() {
           </Link>
 
           <Link
+            href="/dashboard/diffusion"
+            className="flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
+          >
+            ✍️ Générer un post depuis une preuve
+          </Link>
+
+          <Link
             href="/p"
             target="_blank"
             className="flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
