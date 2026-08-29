@@ -1,4 +1,10 @@
 import { defineConfig, devices } from '@playwright/test'
+import dotenv from 'dotenv'
+
+// Playwright ne charge pas .env.local automatiquement (contrairement au
+// serveur Next.js) : sans ça, E2E_USER_EMAIL/E2E_USER_PASSWORD restent
+// invisibles pour le process de test. Voir docs/technique/tests.md.
+dotenv.config({ path: '.env.local' })
 
 const baseURL = 'http://localhost:3000'
 

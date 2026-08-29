@@ -60,7 +60,7 @@ Fichier : `.github/workflows/ci.yml`
 
 ### Contenu du job `quality`
 
-Le workflow exécute un seul job nommé `quality` sur `ubuntu-latest`, avec 6 steps :
+Le workflow exécute un seul job nommé `quality` sur `ubuntu-latest`, avec 8 steps :
 
 | # | Step | Action |
 |---|---|---|
@@ -69,7 +69,15 @@ Le workflow exécute un seul job nommé `quality` sur `ubuntu-latest`, avec 6 st
 | 3 | Install | `npm ci` — installe les dépendances |
 | 4 | Lint | `npm run lint` — ESLint |
 | 5 | Build | `npm run build` — build Next.js de production |
-| 6 | Test | `npm test` — Vitest |
+| 6 | Unit tests | `npm run test:run` — Vitest |
+| 7 | Install Playwright browsers | `npx playwright install --with-deps chromium` |
+| 8 | E2E tests | `npm run test:e2e` — Playwright, chaîne critique (`decisions.md`, `DT-Lot5-02`) |
+
+**Secrets requis pour le step 8** (Settings → Secrets and variables → Actions du repo) :
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD`.
+
+⚠️ Ce step crée puis archive un projet réel `[E2E] ...` dans la base de
+production à chaque exécution (voir `DT-Lot5-02`).
 
 ### Résultat visible
 
@@ -79,7 +87,6 @@ Un badge vert = tout est OK. Un badge rouge = un des 6 steps a échoué. Cliquer
 
 ### Ce qui n'est PAS dans la CI
 
-- **Playwright** (voir DT-Lot0-09 dans `decisions.md`)
 - Type check TypeScript séparé — déjà couvert par `npm run build` qui échoue si TS échoue
 
 ---
