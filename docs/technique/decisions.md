@@ -668,6 +668,8 @@ Si à ce moment la valeur reste floue pour l'utilisateur, la priorité devra bas
   Preuve décisive : `/dashboard/projects` passe de **500 à 307 → /login** alors que cette page, à ce moment-là, n'avait encore aucune vérification propre — la redirection ne pouvait venir que du proxy. Corroboré par la sortie de `next build`, qui liste désormais une ligne `ƒ Proxy (Middleware)`.
 
   Suite complète verte : lint, build, 10 tests unitaires, 8 tests E2E.
+
+  **Vérifié en production après déploiement Vercel**, en anonyme, sur les 11 routes : `/login`, `/p` et une fiche `/p/<slug>` réelle en 200 ; `/`, `/dashboard`, `/dashboard/projects`, `/dashboard/projects/new`, `/dashboard/projects/<uuid>`, `.../edit`, `.../archive` et `/dashboard/diffusion` en 307 → `/login`. Le constat de `DT-Lot5-06` avait été fait en production — sa levée l'est aussi. La mesure « avant » en prod y était identique au local, `500` inclus.
 - **Conséquences :**
   - `DT-Lot1-02` est **remplacée** : la convention « `proxy.ts` à la racine » est fausse dès lors que le code vit sous `src/`. Ce que `DT-Lot1-02` conservait de juste (déléguer à `src/lib/supabase/middleware.ts`, vérifier le refresh de session à chaque modification) reste valable.
   - Le proxy rafraîchit désormais réellement les cookies Supabase à chaque requête — un comportement qui n'avait jamais tourné depuis le Lot 1.
