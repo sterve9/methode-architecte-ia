@@ -674,3 +674,29 @@ Si à ce moment la valeur reste floue pour l'utilisateur, la priorité devra bas
   - `DT-Lot1-02` est **remplacée** : la convention « `proxy.ts` à la racine » est fausse dès lors que le code vit sous `src/`. Ce que `DT-Lot1-02` conservait de juste (déléguer à `src/lib/supabase/middleware.ts`, vérifier le refresh de session à chaque modification) reste valable.
   - Le proxy rafraîchit désormais réellement les cookies Supabase à chaque requête — un comportement qui n'avait jamais tourné depuis le Lot 1.
   - **Leçon transposable** : une convention de framework validée par « le fichier existe et le code est correct » n'est pas validée. Seule une mesure du comportement réel l'est. Ce défaut a survécu à cinq lots et à un tag de production.
+
+---
+
+### DT-Lot5-08 — Outillage GitHub : l'API anonyme reste le canal de lecture de la CI, le MCP `github` est abandonné
+
+- **Date :** 29/08/2026
+- **Statut :** Accepté
+- **Contexte :**
+  La S22 avait diagnostiqué la panne du serveur MCP `github` : un PAT classique (`ghp_`) figé en clair dans `~/.claude.json`, rejeté en `Bad credentials`, dont la seule présence désactivait le repli OAuth. Le bloc `headers` avait été retiré, une sauvegarde conservée, et la vérification de la réparation reportée au premier geste de la S23.
+
+  **Mesure faite en S23.** L'édition à froid a bien tenu : l'entrée est propre (`{type: http, url: https://api.githubcopilot.com/mcp/}`, aucun `headers`, aucun secret). Mais la connexion échoue toujours, avec une erreur **différente** de la 401 précédente : le serveur ne propose pas l'enregistrement dynamique de client (*dynamic client registration*) que le client MCP attend pour ouvrir le flux OAuth. Ce n'est donc plus un problème d'identifiants mais d'incompatibilité de négociation d'authentification — rien qui se règle côté dépôt.
+- **Décision :**
+  **Ne pas poursuivre la réparation du MCP `github`.** Le canal de lecture de la CI reste l'**API GitHub anonyme**, déjà éprouvée en S22 sur ce dépôt public :
+
+  ```
+  curl -s "https://api.github.com/repos/sterve9/methode-architecte-ia/actions/runs?per_page=3"
+  curl -s "https://api.github.com/repos/sterve9/methode-architecte-ia/actions/runs/<ID>/jobs"
+  ```
+
+  Deux options écartées explicitement :
+  - **Remettre un PAT valide en `headers`** — réintroduirait un secret en clair dans `~/.claude.json` et redésactiverait tout repli OAuth, c'est-à-dire recréerait exactement la panne silencieuse de la S22 pour un gain nul sur le besoin réel.
+  - **Installer `gh` (CLI)** — absent de winget, installation manuelle, et sans effet sur le MCP. Reste utile un jour, pour une seule chose (voir ci-dessous).
+- **Conséquences :**
+  - `~/.claude.json.bak-avant-oauth-github` a été **supprimé** : il contenait encore l'ancien PAT en clair. Le jeton reste à révoquer sur `github.com/settings/tokens` — il est déjà rejeté par GitHub, mais un secret périmé sur disque n'a pas à survivre.
+  - **Limite mesurée et assumée** : en anonyme, `runs` et `jobs` répondent (donc « la CI est-elle passée ? » et « quelle étape a échoué ? » sont couverts), mais le **téléchargement des logs répond 403**. Lire le log brut d'un run en échec nécessiterait `gh`.
+  - **Condition de réouverture** : si le dépôt passait un jour en privé, l'API anonyme cesserait de répondre et `gh` deviendrait obligatoire, pas optionnel.
