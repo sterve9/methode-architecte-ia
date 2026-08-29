@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 
+import { createClient } from '@/lib/supabase/server'
 import { canTransition } from '@/modules/m1-projets/domain/transitions'
 import { getProjectById } from '@/modules/m1-projets/queries/get-project-by-id'
 import { getProjectDeliverables } from '@/modules/m2-methode/queries/get-project-deliverables'
@@ -14,6 +15,9 @@ import { StepStatusButton } from '@/modules/m2-methode/ui/step-status-button'
  * Page détail d'un projet.
  *
  * Route : /dashboard/projects/[id]
+ *
+ * Protégée par vérification de session (auth.getUser()) en défense en
+ * profondeur, en plus de l'allowlist du proxy (DT-Lot5-07).
  */
 
 function getStatusBadgeStyle(status: MethodStepStatus) {
@@ -33,6 +37,16 @@ export default async function ProjectDetailPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  // 1. Vérification de session
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/login')
+  }
+
   const { id } = await params
   const project = await getProjectById(id)
 

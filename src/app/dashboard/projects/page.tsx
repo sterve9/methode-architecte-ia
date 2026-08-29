@@ -1,4 +1,7 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+
+import { createClient } from '@/lib/supabase/server';
 import { listProjects } from '@/modules/m1-projets/queries/list-projects';
 
 /**
@@ -7,8 +10,21 @@ import { listProjects } from '@/modules/m1-projets/queries/list-projects';
  * Route : /dashboard/projects
  *
  * Chaque projet est cliquable et mène à sa page détail.
+ *
+ * Protégée par vérification de session (auth.getUser()) en défense en
+ * profondeur, en plus de l'allowlist du proxy (DT-Lot5-07).
  */
 export default async function ProjectsPage() {
+  // 1. Vérification de session
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/login');
+  }
+
   const projects = await listProjects();
 
   return (

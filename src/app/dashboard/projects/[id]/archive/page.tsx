@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 import { getProjectById } from '@/modules/m1-projets/queries/get-project-by-id';
 import { archiveProject } from '@/modules/m1-projets/actions/archive-project';
 import { canTransition } from '@/modules/m1-projets/domain/transitions';
@@ -14,12 +15,25 @@ import { canTransition } from '@/modules/m1-projets/domain/transitions';
  * - Si transition vers Archivé impossible depuis le statut actuel :
  *   affiche un message explicatif au lieu du formulaire
  * - Sinon : formulaire avec avertissement + textarea raison obligatoire
+ *
+ * Protégée par vérification de session (auth.getUser()) en défense en
+ * profondeur, en plus de l'allowlist du proxy (DT-Lot5-07).
  */
 export default async function ArchiveProjectPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  // 1. Vérification de session
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/login');
+  }
+
   const { id } = await params;
   const project = await getProjectById(id);
 

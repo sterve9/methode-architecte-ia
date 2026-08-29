@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 import { getProjectById } from '@/modules/m1-projets/queries/get-project-by-id';
 import { updateProject } from '@/modules/m1-projets/actions/update-project';
 import { getAvailableTransitions } from '@/modules/m1-projets/domain/transitions';
@@ -14,12 +15,25 @@ import { getAvailableTransitions } from '@/modules/m1-projets/domain/transitions
  * - Sinon : formulaire pré-rempli
  * - Le select de statut ne montre que les transitions autorisées
  * - Si le projet est archivé : nom/description modifiables, statut immuable
+ *
+ * Protégée par vérification de session (auth.getUser()) en défense en
+ * profondeur, en plus de l'allowlist du proxy (DT-Lot5-07).
  */
 export default async function EditProjectPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  // 1. Vérification de session
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/login');
+  }
+
   const { id } = await params;
   const project = await getProjectById(id);
 
