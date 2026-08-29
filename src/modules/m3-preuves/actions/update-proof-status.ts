@@ -58,6 +58,7 @@ export async function updateProofStatus(
   // 5. Invalidation du cache
   revalidatePath(`/p/${proof.slug}`)
   revalidatePath('/p')
+  revalidatePath('/dashboard/diffusion')
 
   return { success: true }
 }
