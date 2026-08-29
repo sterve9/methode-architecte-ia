@@ -19,7 +19,8 @@ import { test, expect } from '@playwright/test'
  *
  * Nettoyage : le projet créé est nommé "[E2E] ..." et archivé par le test
  * lui-même en toute fin de parcours (pas de suppression physique possible
- * par conception, DT-Lot2-01).
+ * par conception, DT-Lot2-01). La preuve publiée est retirée séparément de
+ * la vitrine : archiver le projet ne l'en retire pas (DT-Lot5-05).
  */
 
 const E2E_EMAIL = process.env.E2E_USER_EMAIL
@@ -105,7 +106,17 @@ test('chaîne critique : Projet → Étape → Livrable → Preuve publique → 
   await expect(publicPage.getByText(deliverableTitle).first()).toBeVisible()
   await publicContext.close()
 
-  // 10. Nettoyage : archivage du projet de test (DT-Lot2-01, pas de suppression physique)
+  // 10. Nettoyage (1/2) : retirer la preuve de la vitrine publique.
+  //     Indispensable : archiver le projet ne retire PAS sa preuve de /p, qui
+  //     liste toutes les preuves `publié` indépendamment du projet. Sans ça,
+  //     chaque exécution laisserait une fausse preuve dans le portfolio public.
+  await page.goto('/dashboard/diffusion')
+  const proofCard = page.locator('li').filter({ hasText: deliverableTitle })
+  await proofCard.getByRole('button', { name: 'Retirer de la vitrine' }).click()
+  await proofCard.getByRole('button', { name: 'Confirmer' }).click()
+  await expect(proofCard).toHaveCount(0)
+
+  // 11. Nettoyage (2/2) : archivage du projet de test (DT-Lot2-01, pas de suppression physique)
   await page.goto(`${projectUrl}/archive`)
   await page
     .getByLabel("Raison de l'archivage")
