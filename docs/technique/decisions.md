@@ -252,7 +252,9 @@ Une décision peut être **Active**, **Dépréciée** ou **Remplacée par** une 
 
 ### DT-Lot1-02 — Convention `proxy.ts` racine (Next.js 16)
 
-**Statut** : Actif
+**Statut** : **Remplacée par `DT-Lot5-07`** (29/08/2026) — l'emplacement retenu ici
+(racine du dépôt) n'est pas lu par Next.js 16 quand le code vit sous `src/` : le
+proxy n'a jamais été appliqué. Texte d'origine conservé ci-dessous.
 **Date** : S11
 
 **Contexte** : Next.js 16 introduit `proxy.ts` comme convention pour le rafraîchissement de session (remplace la convention `middleware.ts` de Next.js 13-15). Le helper Supabase SSR `updateSession()` doit être appelé sur chaque requête pour maintenir les cookies d'auth à jour.
@@ -614,7 +616,7 @@ Si à ce moment la valeur reste floue pour l'utilisateur, la priorité devra bas
 ### DT-Lot5-06 — Le proxy racine n'est pas appliqué : constat, report du traitement
 
 - **Date :** 29/08/2026
-- **Statut :** Accepté — constat, traitement reporté
+- **Statut :** Accepté — constat, traitement reporté. **Traité par `DT-Lot5-07`** (29/08/2026, séance S22).
 - **Contexte :**
   En vérifiant que la vitrine est bien accessible aux visiteurs anonymes, le comportement réel s'est avéré contredire le code : `/` figure dans `PUBLIC_PATHS` mais redirige (307), `/p` n'y figure pas mais répond 200. Mesuré en production en anonyme.
 
@@ -626,3 +628,47 @@ Si à ce moment la valeur reste floue pour l'utilisateur, la priorité devra bas
 - **Conséquences :**
   - Toute nouvelle page privée doit faire sa propre vérification `auth.getUser()` sans se reposer sur le proxy — c'est ce que fait `/dashboard/diffusion`.
   - Chantier à ouvrir en priorité à la prochaine séance.
+
+---
+
+### DT-Lot5-07 — Le proxy est appliqué (déplacé sous `src/`) et la vitrine explicitement déclarée publique
+
+- **Date :** 29/08/2026
+- **Statut :** Accepté — **traite `DT-Lot5-06`**, **remplace `DT-Lot1-02`**
+- **Contexte :**
+  `DT-Lot5-06` avait constaté que le proxy n'était pas appliqué, sans le corriger. Vérification faite dans la doc embarquée (`node_modules/next/dist/docs/01-app/01-getting-started/16-proxy.md`, § Convention) : le fichier doit vivre « in the project root, **or inside `src` if applicable, so that it is located at the same level as `pages` or `app`** ». L'app étant sous `src/app/`, le seul emplacement valide est `src/proxy.ts`. `DT-Lot1-02` avait donc institué un proxy à un emplacement que Next.js 16 ne lit jamais dans cette structure.
+
+  **Mesure « avant », en anonyme, sur le serveur local** — plus mauvaise que ce que décrivait `DT-Lot5-06` :
+
+  | Route | Avant | D'où venait le comportement |
+  |---|---|---|
+  | `/` | 307 → `/login` | logique propre à `src/app/page.tsx`, pas le proxy |
+  | `/p` | 200 | aucune protection : le proxy ne tournait pas |
+  | `/dashboard`, `/dashboard/diffusion` | 307 → `/login` | `auth.getUser()` de la page |
+  | `/dashboard/projects` | **500** | aucune vérification de session ; `listProjects()` throw sur `permission denied for table projects` |
+
+  **Audit des 7 pages de `src/app/`** (angle mort n°4 du prompt de reprise S22) : seules 3 vérifiaient la session (`/dashboard`, `/dashboard/diffusion`, `/dashboard/projects/new`). Les 4 pages projets (`/dashboard/projects`, `[id]`, `[id]/edit`, `[id]/archive`) ne la vérifiaient pas — contredisant l'affirmation de `architecture.md` §4 selon laquelle « toutes les pages du dashboard » le faisaient.
+
+  **Pas d'exposition de données pour autant** : le rôle `anon` ne reçoit aucun GRANT sur `projects`, `method_steps` ni `deliverables` (`20260816183121_grant_projects_permissions.sql`). Un anonyme obtenait une erreur ou un 404, jamais des données. Le défaut était réel mais relevait de la défense en profondeur, pas de la fuite.
+- **Décisions :**
+  1. **`proxy.ts` → `src/proxy.ts`** (`git mv`, contenu inchangé). L'import `@/lib/supabase/middleware` reste valide, `tsconfig.json` mappant déjà `@/*` sur `./src/*`.
+  2. **`/p` ajouté à `PUBLIC_PATHS` et `/p/` à `PUBLIC_PREFIXES`** dans `src/lib/supabase/middleware.ts`, *dans le même commit et avant le déplacement* — c'est le piège signalé par `DT-Lot5-06`. Un commentaire dans le fichier rappelle que retirer ces entrées coupe l'accès anonyme au portfolio (CA-05, CT-09).
+  3. **Défense en profondeur maintenue** : les 4 pages projets reçoivent le même bloc `auth.getUser()` → `redirect('/login')` que `/dashboard/projects/new`. Le proxy est la première ligne, la vérification de page la seconde. La règle posée par `DT-Lot5-06` (« toute page privée fait sa propre vérification ») reste donc en vigueur malgré la réparation du proxy.
+  4. **Verrouillage par test E2E** : nouveau fichier `e2e/acces-public-prive.spec.ts`. Il est **séparé** de `chaine-critique.spec.ts` volontairement : ce dernier porte un `test.skip()` global conditionné à `E2E_USER_EMAIL`/`E2E_USER_PASSWORD`, et y loger un test qui n'a besoin d'aucun compte l'aurait rendu silencieusement sautable — le faux vert que ce test existe précisément pour empêcher. Ces tests n'écrivent rien en base, contrairement à la chaîne critique (`DT-Lot5-02`).
+- **Vérification :**
+
+  | Route | Anonyme, après | Attendu |
+  |---|---|---|
+  | `/` | 307 → `/login` | ✅ |
+  | `/login` | 200 | ✅ |
+  | `/p` | 200 | ✅ |
+  | `/p/<slug réel>` | 200 | ✅ |
+  | `/dashboard`, `/dashboard/projects`, `/dashboard/projects/<uuid>`, `/dashboard/projects/new`, `/dashboard/diffusion` | 307 → `/login` | ✅ |
+
+  Preuve décisive : `/dashboard/projects` passe de **500 à 307 → /login** alors que cette page, à ce moment-là, n'avait encore aucune vérification propre — la redirection ne pouvait venir que du proxy. Corroboré par la sortie de `next build`, qui liste désormais une ligne `ƒ Proxy (Middleware)`.
+
+  Suite complète verte : lint, build, 10 tests unitaires, 8 tests E2E.
+- **Conséquences :**
+  - `DT-Lot1-02` est **remplacée** : la convention « `proxy.ts` à la racine » est fausse dès lors que le code vit sous `src/`. Ce que `DT-Lot1-02` conservait de juste (déléguer à `src/lib/supabase/middleware.ts`, vérifier le refresh de session à chaque modification) reste valable.
+  - Le proxy rafraîchit désormais réellement les cookies Supabase à chaque requête — un comportement qui n'avait jamais tourné depuis le Lot 1.
+  - **Leçon transposable** : une convention de framework validée par « le fichier existe et le code est correct » n'est pas validée. Seule une mesure du comportement réel l'est. Ce défaut a survécu à cinq lots et à un tag de production.

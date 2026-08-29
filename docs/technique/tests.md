@@ -47,6 +47,15 @@ npm run test:e2e
   Sans ces variables, le test est automatiquement ignoré (`test.skip`).
   Le test crée un projet réel préfixé `[E2E]` et l'archive lui-même en
   fin de parcours (pas de suppression physique possible, `DT-Lot2-01`).
+- `e2e/acces-public-prive.spec.ts` — verrouille la frontière public / privé
+  appliquée par le proxy (`DT-Lot5-07`) : `/p` et `/p/[slug]` restent
+  atteignables sans authentification, toute route `/dashboard/*` redirige
+  un anonyme vers `/login`. **Fichier séparé volontairement** : ces tests
+  n'ont besoin d'aucun compte, et les loger dans `chaine-critique.spec.ts`
+  les soumettrait à son `test.skip()` global sur `E2E_USER_EMAIL` — ils
+  seraient silencieusement sautés dès que la variable manque, soit
+  exactement le faux vert qu'ils existent pour empêcher. Ils n'écrivent
+  rien en base.
 
 **Non couvert par ce test** : l'enregistrement des 4 événements clés
 dans la table `events` — cette table n'existe pas encore, elle est

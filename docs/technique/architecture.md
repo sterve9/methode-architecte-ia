@@ -30,7 +30,7 @@ src/
   app/            → routes Next.js (App Router), y compris les pages publiques
   lib/            → utilitaires transverses (client Supabase, etc.)
   modules/        → les 7 modules métier (voir §3)
-proxy.ts          → racine du repo (contrainte Next.js 16, voir §4)
+  proxy.ts        → au même niveau que app/ (contrainte Next.js 16, voir §4)
 ```
 
 **Dette connue** : l'alias tsconfig `@/*` pointe vers `./*` au lieu de
@@ -78,24 +78,30 @@ un exemple complet) :
 ## 4. Authentification et session
 
 - Utilisateur unique, signup public désactivé (`decisions.md`, `DT-Lot1-01`).
-- Rafraîchissement de session : `proxy.ts` (racine du repo) délègue à
+- Rafraîchissement de session : `src/proxy.ts` délègue à
   `src/lib/supabase/middleware.ts`. Convention Next.js 16 — pas de
-  `middleware.ts` (`decisions.md`, `DT-Lot1-02`).
+  `middleware.ts`. Le fichier doit être au même niveau que `app/`, donc sous
+  `src/` ici (`decisions.md`, `DT-Lot5-07`, qui remplace `DT-Lot1-02`).
 
-### ⚠️ Le proxy racine n'est pas appliqué
+### Frontière public / privé
 
-Mesuré en production, en anonyme : `/` redirige alors qu'il est déclaré public,
-`/p` répond 200 alors qu'il ne l'est pas. `proxy.ts` est à la racine du dépôt
-alors que le projet utilise `src/` — Next.js l'attend à `src/proxy.ts`.
+Deux lignes de défense, dans cet ordre :
 
-**Conséquence pratique : toute page privée doit faire sa propre vérification
-`auth.getUser()`.** C'est ce que font toutes les pages du dashboard. Ne jamais
-supposer qu'une route est protégée par le proxy.
+1. **Le proxy** (`src/proxy.ts` → `src/lib/supabase/middleware.ts`) applique une
+   allowlist : tout ce qui n'est pas déclaré public redirige vers `/login`.
+   Routes publiques : `/`, `/login`, `/p`, et les préfixes `/auth/` et `/p/`.
+2. **Chaque page privée refait sa propre vérification** `auth.getUser()` →
+   `redirect('/login')`. Cette règle survit à la réparation du proxy : elle est
+   ce qui a évité l'exposition tant que le proxy ne tournait pas.
 
-**Avant de corriger** : ajouter `/p` à `PUBLIC_PATHS` *d'abord*, sinon le
-déplacement du fichier coupe l'accès anonyme à toute la vitrine publique.
+⚠️ **`/p` et `/p/` doivent rester dans l'allowlist** : ce sont la vitrine et les
+fiches de preuves, seule surface publique du système (CA-05, contrat CT-09). Les
+en retirer coupe instantanément l'accès anonyme au portfolio.
 
-Détail complet et report assumé : `decisions.md`, `DT-Lot5-06`.
+Les deux comportements sont verrouillés par `e2e/acces-public-prive.spec.ts`.
+
+Historique du défaut et mesures avant/après : `decisions.md`, `DT-Lot5-06`
+(constat) puis `DT-Lot5-07` (correction).
 
 ---
 
