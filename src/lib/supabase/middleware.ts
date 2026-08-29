@@ -11,7 +11,11 @@ import { NextResponse, type NextRequest } from 'next/server'
 const PUBLIC_PATHS = ['/', '/login', '/p']
 const PUBLIC_PREFIXES = ['/auth/', '/p/']
 
-function isPublicPath(pathname: string): boolean {
+// Exportée pour être testée unitairement : c'est l'allowlist qui décide, à
+// chaque requête, de ce qui est public. Une règle de sécurité de cette portée
+// ne doit pas dépendre du seul test E2E pour être vérifiée (12.Strategie_Tests.md
+// §8, Lot 1).
+export function isPublicPath(pathname: string): boolean {
   if (PUBLIC_PATHS.includes(pathname)) {
     return true
   }

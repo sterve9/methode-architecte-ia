@@ -111,7 +111,34 @@ Si les 3 passent en local, la CI passera aussi.
 
 ---
 
-## 5. Pour aller plus loin
+## 5. Zones non testées automatiquement — risque assumé
+
+Exigence de `12.Strategie_Tests.md` §9 : « les zones non testées
+automatiquement sont explicitement listées et le risque est assumé ».
+Cette liste a été établie à la séance S23, lors de l'audit des conditions
+de sortie du MVP. **Elle est à relire à chaque lot.**
+
+| Zone | Ce qui n'est pas couvert | Pourquoi c'est assumé |
+|---|---|---|
+| Server Actions | Leur conformité RLS réelle. Les tests d'émission (`events-emission.test.ts`) doublent Supabase : ils prouvent l'appel, pas l'écriture. | Couvert de bout en bout par `chaine-critique.spec.ts`, qui tourne contre la vraie base. |
+| `queries/` (M1, M2, M3, M5) | Aucun test unitaire. | Ce sont des enveloppes de requêtes Supabase : les doubler ne testerait que le double. Couvertes indirectement par le E2E. |
+| Composants `ui/` | Aucun test de rendu, alors que Vitest tourne sous `jsdom` et en serait capable. | Le rendu est vérifié par le E2E sur le parcours critique. Un test de rendu deviendra utile le jour où un composant portera de la logique. |
+| Migrations SQL et policies RLS | Aucun test automatisé. | Vérifiées à la main via l'API REST Supabase, en `anon` et en authentifié (voir la section « Vérification » de `DT-Lot5-09` pour le protocole). |
+| Refresh de session du proxy | `isPublicPath` est testée unitairement, mais pas `updateSession` : le rafraîchissement des cookies Supabase n'est éprouvé qu'à l'usage. | Il n'a commencé à tourner qu'au Lot 5 (`DT-Lot5-07`). Premier suspect en cas de déconnexion inattendue. |
+| Génération de posts (M4) | L'appel réel à l'API Anthropic. Seuls `build-post-prompt` et `parse-post-draft` sont testés. | Décision de coût explicite : la CI tourne à chaque push, chaque génération est payante. Conséquence : le rendu sur une variété de contenus réels reste inconnu. |
+
+Deux effets de bord connus du test E2E, tracés ailleurs mais rappelés ici :
+
+- Il écrit dans la base de **production** à chaque exécution (`DT-Lot5-02`).
+  Il archive son projet et retire sa preuve de la vitrine, mais n'efface rien
+  physiquement.
+- Ses **événements ne sont pas supprimables** : le journal `events` est
+  append-only (`DT-Lot5-09`). Ils sont écartés de la cadence à la lecture,
+  sur le préfixe `[E2E]` du nom du projet.
+
+---
+
+## 6. Pour aller plus loin
 
 - Stratégie de tests par lot (règles, critères de sortie) : `12.Strategie_Tests.md`
 - Pipeline CI/CD complet : `deploiement.md`
