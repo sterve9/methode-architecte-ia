@@ -40,10 +40,18 @@ test.describe('frontière public / privé, sans authentification', () => {
   }) => {
     await page.goto('/p')
 
-    const firstProof = page.locator('a[href^="/p/"]').first()
+    // On écarte les preuves éphémères publiées par chaine-critique.spec.ts :
+    // elle les retire en fin de parcours, et en exécution parallèle on
+    // tomberait sur un 404 au milieu de ce test.
+    const firstProof = page
+      .locator('article')
+      .filter({ hasNotText: 'Livrable E2E' })
+      .locator('a[href^="/p/"]')
+      .first()
+
     test.skip(
       (await firstProof.count()) === 0,
-      'Aucune preuve publiée sur la vitrine : rien à consulter.'
+      'Aucune preuve publique durable sur la vitrine : rien à consulter.'
     )
 
     const href = await firstProof.getAttribute('href')
