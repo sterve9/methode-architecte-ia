@@ -69,6 +69,7 @@ export async function createProof(
       format: input.format.trim(),
       summary: input.summary.trim(),
       context: input.context?.trim() || null,
+      image_url: input.image_url?.trim() || null,
       status: 'brouillon',
     })
     .select('id, slug')

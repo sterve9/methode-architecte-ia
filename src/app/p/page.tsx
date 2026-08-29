@@ -1,124 +1,89 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
 import { getPublicProofs } from '@/modules/m3-preuves/queries/get-public-proofs'
 
 export const revalidate = 60 // Revalidation ISR toutes les 60 secondes
+
+export const metadata: Metadata = {
+  title: 'Portfolio',
+  description:
+    "Récits de compétences, livrables techniques et cas d'usage conçus selon la Méthode Architecte IA.",
+}
 
 export default async function PublicPortfolioPage() {
   const proofs = await getPublicProofs()
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        background: '#f8fafc',
-        padding: '2rem 1rem',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-      }}
-    >
-      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        {/* Header Portfolio */}
-        <header style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
-          <span
-            style={{
-              fontSize: '0.8rem',
-              fontWeight: 'bold',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              color: '#0070f3',
-              background: '#e6f0ff',
-              padding: '0.25rem 0.6rem',
-              borderRadius: '999px',
-            }}
-          >
+    <main className="min-h-screen bg-slate-50 px-4 py-10 sm:py-16">
+      <div className="mx-auto w-full max-w-2xl">
+        <header className="mb-10 text-center">
+          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-blue-600">
             Portfolio d&apos;Architecture IA
           </span>
-          <h1 style={{ fontSize: '2rem', fontWeight: '800', color: '#0f172a', marginTop: '0.75rem' }}>
+          <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
             Récits de Compétences & Preuves
           </h1>
-          <p style={{ color: '#475569', fontSize: '1rem', maxWidth: '600px', margin: '0.5rem auto 0' }}>
-            Démonstrateurs, livrables techniques et cas d&apos;usage conçus et validés selon la Méthode Architecte IA.
+          <p className="mx-auto mt-2 max-w-md text-slate-600">
+            Démonstrateurs, livrables techniques et cas d&apos;usage conçus et validés
+            selon la Méthode Architecte IA.
           </p>
         </header>
 
-        {/* Liste des Preuves */}
         {proofs.length === 0 ? (
-          <div
-            style={{
-              background: '#ffffff',
-              padding: '3rem 1.5rem',
-              borderRadius: '12px',
-              textAlign: 'center',
-              border: '1px solid #e2e8f0',
-            }}
-          >
-            <p style={{ color: '#64748b', fontSize: '0.95rem', margin: 0 }}>
+          <div className="rounded-xl border border-slate-200 bg-white p-12 text-center">
+            <p className="text-slate-500">
               Aucune preuve publique n&apos;a été publiée pour le moment.
             </p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gap: '1.25rem' }}>
+          <div className="flex flex-col gap-5">
             {proofs.map((proof) => (
               <article
                 key={proof.id}
-                style={{
-                  background: '#ffffff',
-                  borderRadius: '12px',
-                  padding: '1.5rem',
-                  border: '1px solid #e2e8f0',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                  transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-                }}
+                className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <span
-                    style={{
-                      fontSize: '0.75rem',
-                      fontWeight: '600',
-                      color: '#0284c7',
-                      background: '#f0f9ff',
-                      padding: '0.15rem 0.5rem',
-                      borderRadius: '4px',
-                      border: '1px solid #bae6fd',
-                    }}
-                  >
-                    {proof.format}
-                  </span>
-                  {proof.published_at && (
-                    <time style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                      {new Date(proof.published_at).toLocaleDateString('fr-FR', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </time>
-                  )}
-                </div>
-
-                <h2 style={{ fontSize: '1.2rem', fontWeight: '700', color: '#0f172a', margin: '0.25rem 0 0.5rem' }}>
-                  <Link
-                    href={`/p/${proof.slug}`}
-                    style={{ color: 'inherit', textDecoration: 'none' }}
-                  >
-                    {proof.title}
+                {proof.image_url && (
+                  <Link href={`/p/${proof.slug}`}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={proof.image_url}
+                      alt={proof.title}
+                      className="h-48 w-full border-b border-slate-100 object-cover"
+                      loading="lazy"
+                    />
                   </Link>
-                </h2>
+                )}
 
-                <p style={{ color: '#334155', fontSize: '0.9rem', lineHeight: '1.5', margin: '0 0 1rem' }}>
-                  {proof.summary}
-                </p>
+                <div className="p-6">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-xs font-semibold text-sky-700">
+                      {proof.format}
+                    </span>
+                    {proof.published_at && (
+                      <time className="text-xs text-slate-400">
+                        {new Date(proof.published_at).toLocaleDateString('fr-FR', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </time>
+                    )}
+                  </div>
 
-                <div>
+                  <h2 className="text-xl font-bold text-slate-900">
+                    <Link href={`/p/${proof.slug}`} className="hover:underline">
+                      {proof.title}
+                    </Link>
+                  </h2>
+
+                  <p className="mt-2 line-clamp-3 text-[0.95rem] leading-relaxed text-slate-600">
+                    {proof.summary}
+                  </p>
+
                   <Link
                     href={`/p/${proof.slug}`}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.25rem',
-                      fontSize: '0.85rem',
-                      fontWeight: '600',
-                      color: '#0070f3',
-                      textDecoration: 'none',
-                    }}
+                    className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-800"
                   >
                     Lire le récit complet →
                   </Link>
@@ -128,8 +93,7 @@ export default async function PublicPortfolioPage() {
           </div>
         )}
 
-        {/* Footer simple */}
-        <footer style={{ marginTop: '3rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.8rem' }}>
+        <footer className="mt-12 text-center text-sm text-slate-400">
           Méthode Architecte IA — Propulsé par Next.js & Supabase
         </footer>
       </div>

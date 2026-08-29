@@ -24,6 +24,7 @@ export function CreateProofButton({
   const [format, setFormat] = useState('Récit de compétence')
   const [summary, setSummary] = useState(deliverableDescription || '')
   const [context, setContext] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,6 +42,7 @@ export function CreateProofButton({
         format: format.trim(),
         summary: summary.trim(),
         context: context.trim() || undefined,
+        image_url: imageUrl.trim() || undefined,
       })
 
       if (!result.success || !result.proofId) {
@@ -240,6 +242,32 @@ export function CreateProofButton({
                   onChange={(e) => setContext(e.target.value)}
                   rows={2}
                   placeholder="Ex: Projet réalisé sous contrainte avec Next.js & Supabase..."
+                  style={{
+                    width: '100%',
+                    padding: '0.4rem',
+                    fontSize: '0.85rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.8rem',
+                    fontWeight: 'bold',
+                    marginBottom: '0.2rem',
+                  }}
+                >
+                  Image de preuve (Optionnel)
+                </label>
+                <input
+                  type="url"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://raw.githubusercontent.com/..."
                   style={{
                     width: '100%',
                     padding: '0.4rem',

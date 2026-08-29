@@ -1,11 +1,44 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
 import { getProofBySlug } from '@/modules/m3-preuves/queries/get-proof-by-slug'
 
 export const revalidate = 60 // Revalidation ISR toutes les 60 secondes
 
+const SITE_URL = 'https://methode-architecte-ia.vercel.app'
+
 interface PublicProofPageProps {
   params: Promise<{ slug: string }>
+}
+
+export async function generateMetadata({
+  params,
+}: PublicProofPageProps): Promise<Metadata> {
+  const { slug } = await params
+  const proof = await getProofBySlug(slug)
+
+  if (!proof) {
+    return { title: 'Preuve introuvable' }
+  }
+
+  return {
+    title: proof.title,
+    description: proof.summary,
+    openGraph: {
+      title: proof.title,
+      description: proof.summary,
+      url: `${SITE_URL}/p/${proof.slug}`,
+      type: 'article',
+      images: proof.image_url ? [{ url: proof.image_url }] : undefined,
+    },
+    twitter: {
+      card: proof.image_url ? 'summary_large_image' : 'summary',
+      title: proof.title,
+      description: proof.summary,
+      images: proof.image_url ? [proof.image_url] : undefined,
+    },
+  }
 }
 
 export default async function PublicProofPage({ params }: PublicProofPageProps) {
@@ -16,142 +49,114 @@ export default async function PublicProofPage({ params }: PublicProofPageProps) 
     notFound()
   }
 
+  const pageUrl = `${SITE_URL}/p/${proof.slug}`
+  const linkedInShareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pageUrl)}`
+  const xShareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(pageUrl)}&text=${encodeURIComponent(proof.title)}`
+
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        background: '#f8fafc',
-        padding: '2rem 1rem',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-      }}
-    >
-      <div style={{ maxWidth: '680px', margin: '0 auto' }}>
-        {/* Navigation retour */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <Link
-            href="/p"
-            style={{
-              fontSize: '0.85rem',
-              color: '#64748b',
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.3rem',
-            }}
-          >
-            ← Retour au portfolio
-          </Link>
-        </div>
-
-        {/* Carte Récit de Compétence */}
-        <article
-          style={{
-            background: '#ffffff',
-            borderRadius: '16px',
-            padding: '2rem',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
-          }}
+    <main className="min-h-screen bg-slate-50 px-4 py-10 sm:py-16">
+      <div className="mx-auto w-full max-w-2xl">
+        <Link
+          href="/p"
+          className="mb-6 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900"
         >
-          {/* Méta en-tête */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <span
-              style={{
-                fontSize: '0.8rem',
-                fontWeight: '700',
-                color: '#0284c7',
-                background: '#f0f9ff',
-                padding: '0.2rem 0.6rem',
-                borderRadius: '6px',
-                border: '1px solid #bae6fd',
-              }}
-            >
-              {proof.format}
-            </span>
-            {proof.published_at && (
-              <time style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                Publié le {new Date(proof.published_at).toLocaleDateString('fr-FR', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </time>
-            )}
-          </div>
+          ← Retour au portfolio
+        </Link>
 
-          {/* Titre du récit */}
-          <h1 style={{ fontSize: '1.8rem', fontWeight: '800', color: '#0f172a', lineHeight: '1.25', margin: '0 0 1.25rem' }}>
-            {proof.title}
-          </h1>
+        <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="p-6 sm:p-10">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700">
+                {proof.format}
+              </span>
+              {proof.published_at && (
+                <time className="text-xs text-slate-400">
+                  Publié le{' '}
+                  {new Date(proof.published_at).toLocaleDateString('fr-FR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </time>
+              )}
+            </div>
 
-          {/* Résumé / Valeur apportée */}
-          <div
-            style={{
-              background: '#f8fafc',
-              borderLeft: '4px solid #0070f3',
-              padding: '1rem 1.25rem',
-              borderRadius: '0 8px 8px 0',
-              marginBottom: '1.5rem',
-            }}
-          >
-            <h3 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0070f3', textTransform: 'uppercase', margin: '0 0 0.4rem' }}>
-              Résumé & Valeur Proposée
-            </h3>
-            <p style={{ color: '#334155', fontSize: '0.95rem', lineHeight: '1.6', margin: 0 }}>
+            <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-4xl">
+              {proof.title}
+            </h1>
+
+            <p className="mt-6 border-l-4 border-blue-600 pl-5 text-xl font-medium leading-snug text-slate-800 sm:text-2xl">
               {proof.summary}
             </p>
           </div>
 
-          {/* Contexte & Méthodologie (si présent) */}
-          {proof.context && (
-            <div style={{ marginBottom: '1.5rem' }}>
-              <h2 style={{ fontSize: '1rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.5rem' }}>
-                Contexte & Méthodologie
-              </h2>
-              <p style={{ color: '#475569', fontSize: '0.9rem', lineHeight: '1.6', whiteSpace: 'pre-line', margin: 0 }}>
-                {proof.context}
-              </p>
-            </div>
+          {proof.image_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={proof.image_url}
+              alt={`Capture du système — ${proof.title}`}
+              className="w-full border-y border-slate-200 object-cover"
+              loading="lazy"
+            />
           )}
 
-          {/* Sceau de Certification */}
-          <div
-            style={{
-              marginTop: '2rem',
-              paddingTop: '1.5rem',
-              borderTop: '1px solid #f1f5f9',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '1rem',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1.2rem' }}>🛡️</span>
-              <div>
-                <strong style={{ display: 'block', fontSize: '0.8rem', color: '#0f172a' }}>
-                  Méthode Architecte IA
-                </strong>
-                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                  Livrable vérifié et certifié
-                </span>
+          <div className="p-6 sm:p-10">
+            {proof.context && (
+              <div className="mb-8">
+                <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-900">
+                  Contexte & Méthodologie
+                </h2>
+                <p className="whitespace-pre-line text-[0.95rem] leading-relaxed text-slate-600">
+                  {proof.context}
+                </p>
+              </div>
+            )}
+
+            {proof.deliverable_url && (
+              <a
+                href={proof.deliverable_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
+              >
+                Voir le code source ↗
+              </a>
+            )}
+
+            <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-6">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🛡️</span>
+                <div>
+                  <strong className="block text-sm text-slate-900">
+                    Méthode Architecte IA
+                  </strong>
+                  <span className="text-xs text-slate-500">
+                    Livrable vérifié et certifié
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <a
+                  href={linkedInShareUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Partager sur LinkedIn"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-colors hover:border-sky-300 hover:text-sky-700"
+                >
+                  in
+                </a>
+                <a
+                  href={xShareUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Partager sur X"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-colors hover:border-slate-900 hover:text-slate-900"
+                >
+                  𝕏
+                </a>
               </div>
             </div>
-
-            <span
-              style={{
-                fontSize: '0.75rem',
-                color: '#166534',
-                background: '#f0fdf4',
-                padding: '0.2rem 0.5rem',
-                borderRadius: '4px',
-                border: '1px solid #bbf7d0',
-                fontWeight: '600',
-              }}
-            >
-              Statut : Publié
-            </span>
           </div>
         </article>
       </div>

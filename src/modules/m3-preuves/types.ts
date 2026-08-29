@@ -8,6 +8,7 @@ export interface PublicProof {
   format: string;
   summary: string;
   context: string | null;
+  image_url: string | null;
   status: ProofStatus;
   published_at: string | null;
   created_at: string;
@@ -21,6 +22,16 @@ export interface CreateProofInput {
   format: string;
   summary: string;
   context?: string;
+  image_url?: string;
+}
+
+/**
+ * Preuve publique enrichie du titre et de l'URL du livrable source.
+ * Usage : fiche publique /p/[slug] (lien "Voir le code source").
+ */
+export interface PublicProofWithSource extends PublicProof {
+  deliverable_title: string | null;
+  deliverable_url: string | null;
 }
 
 export interface UpdateProofInput {
@@ -29,5 +40,6 @@ export interface UpdateProofInput {
   format?: string;
   summary?: string;
   context?: string;
+  image_url?: string;
   status?: ProofStatus;
 }
