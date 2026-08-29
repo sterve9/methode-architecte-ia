@@ -3,8 +3,13 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 // Routes publiques : accessibles sans authentification.
 // Toute route non listée ici sera considérée comme privée.
-const PUBLIC_PATHS = ['/', '/login']
-const PUBLIC_PREFIXES = ['/auth/']
+//
+// ⚠️ `/p` (vitrine des preuves publiques) et son préfixe `/p/` (fiche
+// `/p/[slug]`) sont la SEULE surface d'exposition publique du système
+// (CA-05, contrat CT-09). Les retirer d'ici couperait instantanément
+// l'accès anonyme à tout le portfolio. Voir DT-Lot5-07.
+const PUBLIC_PATHS = ['/', '/login', '/p']
+const PUBLIC_PREFIXES = ['/auth/', '/p/']
 
 function isPublicPath(pathname: string): boolean {
   if (PUBLIC_PATHS.includes(pathname)) {
