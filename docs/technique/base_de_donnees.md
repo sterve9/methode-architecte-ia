@@ -29,9 +29,10 @@ une table ou une policy sans casser l'existant.
 | `method_steps` | Étapes clonées, instances par projet (M2) | idem |
 | `deliverables` | Livrables rattachés à une étape (M2) | idem |
 | `public_proofs` | Preuves publiques (M3) | `20260824091514_create_public_proofs_table.sql` |
+| `events` | Journal des événements clés, append-only (M5) | `20260829233704_create_events_table.sql` |
 
-Pas de table `events` à ce jour — c'est l'objet du Lot 5 (Instrumentation),
-voir `11.Plan_Implementation.md` et `decisions.md` (`DT-Lot5-01`).
+La table `events` a été introduite au Lot 5 (Instrumentation), voir
+`11.Plan_Implementation.md` et `decisions.md` (`DT-Lot5-01`, `DT-Lot5-09`).
 
 ### `projects`
 
@@ -50,6 +51,24 @@ voir `11.Plan_Implementation.md` et `decisions.md` (`DT-Lot5-01`).
   externe, jamais un fichier uploadé en MVP (`DT-Lot3-01`).
 - Cycles de vie détaillés : `05.Cycle_de_Vie.md` §7-8, implémentés dans
   `m2-methode/domain/step-transitions.ts` et `deliverable-transitions.ts`.
+
+### `events`
+
+- **Append-only** : aucune policy `UPDATE`, aucune policy `DELETE`
+  (`DT-Lot5-09`). Un journal réécrivable ne vaut rien comme mesure.
+- `type` : `CHECK IN ('Projet créé', 'Étape terminée', 'Livrable attaché',
+  'Preuve publiée')` — les 4 événements clés du Lot 5.
+- `source_id` : `UUID NOT NULL` **sans clé étrangère**. Référence polymorphe
+  assumée : les 4 événements pointent vers 4 tables différentes, qualifiées
+  par `source_type`. La cohérence du couple (`type`, `source_type`) est tenue
+  côté applicatif par `m5-mesures/domain/event-rules.ts`.
+- `project_id` : vraie FK vers `projects`, pivot de la RLS et porteur de la
+  métrique de cadence (CT-04, CT-10, CT-11).
+- **Rien pour `anon`** : aucune policy, et `REVOKE ALL` en défense en
+  profondeur. C'est le critère de sortie « aucun événement privé n'est exposé
+  publiquement », garanti en base et non par le code appelant.
+- Seul point d'écriture : `recordEvent()` (`m5-mesures/actions/record-event.ts`),
+  appelé depuis les Server Actions des modules émetteurs — jamais un trigger.
 
 ### `public_proofs`
 

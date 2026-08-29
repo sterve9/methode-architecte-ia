@@ -700,3 +700,43 @@ Si à ce moment la valeur reste floue pour l'utilisateur, la priorité devra bas
   - `~/.claude.json.bak-avant-oauth-github` a été **supprimé** : il contenait encore l'ancien PAT en clair. Le jeton reste à révoquer sur `github.com/settings/tokens` — il est déjà rejeté par GitHub, mais un secret périmé sur disque n'a pas à survivre.
   - **Limite mesurée et assumée** : en anonyme, `runs` et `jobs` répondent (donc « la CI est-elle passée ? » et « quelle étape a échoué ? » sont couverts), mais le **téléchargement des logs répond 403**. Lire le log brut d'un run en échec nécessiterait `gh`.
   - **Condition de réouverture** : si le dépôt passait un jour en privé, l'API anonyme cesserait de répondre et `gh` deviendrait obligatoire, pas optionnel.
+
+---
+
+### DT-Lot5-09 — Modèle du journal `events` : polymorphe, append-only, écrit par les Server Actions
+
+- **Date :** 29/08/2026
+- **Statut :** Accepté — met en œuvre `DT-Lot5-01` (contrats CT-04, CT-10, CT-11)
+- **Contexte :**
+  Le Lot 5 exige quatre choses de `events` : les 4 événements clés enregistrés automatiquement, chacun portant *type, horodatage, identifiant de l'objet source*, consultables en interne, et **aucun événement privé exposé publiquement**. CT-04/10/11 y ajoutent l'identifiant du projet.
+
+  Trois difficultés, tranchées ci-dessous.
+- **Décisions :**
+
+  **1. Référence polymorphe assumée plutôt que colonnes FK multiples.**
+  Les 4 événements pointent vers 4 tables (`projects`, `method_steps`, `deliverables`, `public_proofs`) ; une clé étrangère ne peut viser qu'une table. Retenu : `source_id UUID` **sans FK**, qualifié par `source_type` sous contrainte `CHECK`. Écarté : quatre colonnes FK nullables — vraie intégrité référentielle, mais table creuse (3 NULL sur 4 à chaque ligne) et `ALTER TABLE` à chaque nouvel événement. Écarté aussi : un `payload JSONB` ouvert — généralité spéculative qu'aucun besoin actuel ne remplit, et colonne non typée qui échappe à TypeScript.
+
+  La cohérence perdue en base est reprise côté applicatif : `sourceTypeForEvent()` (`m5-mesures/domain/event-rules.ts`) déduit `source_type` du type d'événement, si bien que les appelants ne peuvent pas produire un couple incohérent. `project_id` est en revanche une **vraie FK** : il porte la métrique et sert de pivot à la RLS.
+
+  **2. Journal append-only : aucune policy `UPDATE`, aucune policy `DELETE`.**
+  Un journal d'événements que l'application peut réécrire ne vaut rien comme mesure. Conséquence directe sur l'angle mort n°4 du prompt de reprise S22 : le test E2E écrit dans la base de **production** à chaque exécution (`DT-Lot5-02`) et **ne peut pas** supprimer ses événements, alors qu'il archive bien son projet et retire sa preuve.
+
+  Traitement retenu : les projets E2E sont déjà nommés `[E2E] …` ; la consultation interne **les écarte à la lecture**, jamais de la base. Écarté : une policy `DELETE` pour que le test nettoie — elle ouvrirait la suppression d'événements à toute l'application, contraire au principe posé depuis `DT-Lot2-01`, et offrirait le moyen d'effacer une mesure gênante. Écarté aussi : une colonne `is_test` — `recordEvent()` ne peut pas savoir qu'elle tourne sous test sans qu'on fasse remonter la notion de test jusque dans le code de production.
+
+  Contrepartie assumée : `/dashboard/mesures?tests=1` lève le filtre. Sans ce paramètre, le test E2E ne verrait pas ses propres événements et ne pourrait pas vérifier qu'ils ont été écrits.
+
+  **3. `recordEvent()` n'est pas une Server Action et ne lève jamais.**
+  Le fichier vit dans `m5-mesures/actions/` par convention de module, mais **ne porte pas `'use server'`** : elle n'est appelée que côté serveur, par les Server Actions des modules émetteurs. La marquer `'use server'` en ferait un point d'entrée réseau — c'est-à-dire un moyen de forger des événements arbitraires et de fausser la mesure.
+
+  Elle retourne un résultat et ne propage jamais d'erreur : l'instrumentation observe la chaîne de valeur, elle ne la commande pas. Un journal indisponible ne doit pas empêcher de créer un projet ni de publier une preuve.
+
+  **4. Un seul événement par preuve, même republiée.**
+  `canTransitionProofStatus` autorise `publié → publié` (idempotence). Émettre sur `newStatus === 'publié'` compterait donc plusieurs fois la même preuve. C'est `published_at` — déjà utilisé par le code pour figer la date de première publication — qui fait foi : le même booléen `isFirstPublication` horodate et décide de l'émission.
+- **Modifications d'appel induites :**
+  - `create-project.ts` faisait `const { error } = await supabase.rpc(...)` et **jetait l'UUID** que `create_project_with_steps` retourne pourtant (`RETURNS UUID`). Il est désormais capté — sans lui, l'événement « Projet créé » n'aurait pas d'objet source.
+  - `create-deliverable.ts` : ajout de `.select('id').single()` sur l'INSERT, pour disposer de l'identifiant du livrable sans relire la table.
+  - `update-proof-status.ts` : la lecture traverse désormais `public_proofs → deliverables → method_steps` pour obtenir le `project_id` exigé par CT-11, que `public_proofs` ne connaît pas directement.
+- **Écart connu avec CT-04 :**
+  Le contrat prévoit « état de départ » et « état d'arrivée » pour **toute** transition de projet. Le périmètre du Lot 5 ne retient que « Projet créé », c'est-à-dire la transition initiale (∅ → `Idée`), déductible du type seul. Les deux colonnes seront ajoutées en migration additive le jour où les autres transitions seront instrumentées. **Ce n'est pas un oubli : c'est un refus d'extension de périmètre, tracé ici pour ne pas être redécouvert comme un bug.**
+- **Vérification :**
+  À compléter — voir la leçon de `DT-Lot5-07` : écrire `recordEvent()` et le voir compiler ne prouve rien. Les tests unitaires d'émission (`__tests__/events-emission.test.ts`) ne vérifient que l'appel, avec un double de Supabase. Seules deux mesures comptent : la lecture directe de la table `events` via l'API REST authentifiée, et l'étape 12 du test E2E de la chaîne critique.
