@@ -51,8 +51,6 @@ next-env.d.ts
 # OS
 Desktop.ini
 
-# Fichiers de reprise de séance (usage personnel, hors méthode publiée)
-99_Prompt_de_reprise*.md
 # Playwright
 /test-results/
 /playwright-report/
