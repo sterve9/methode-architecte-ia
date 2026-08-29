@@ -9,7 +9,8 @@
  * 3. Valide que l'URL est bien formée (http:// ou https://).
  * 4. Récupère le project_id associé à l'étape pour invalider le cache plus tard.
  * 5. Insère le livrable en base avec le statut 'Brouillon'.
- * 6. Invalide le cache de la page projet.
+ * 6. Émet l'événement « Livrable attaché » vers M5 (contrat CT-10).
+ * 7. Invalide le cache de la page projet.
  *
  * Sécurité :
  * - RLS Supabase (deliverables_insert_own) vérifie que l'utilisateur est le propriétaire.
@@ -18,6 +19,7 @@
 import { revalidatePath } from 'next/cache'
 
 import { createClient } from '@/lib/supabase/server'
+import { recordEvent } from '@/modules/m5-mesures/actions/record-event'
 
 export async function createDeliverable(
   formData: FormData
@@ -79,19 +81,34 @@ export async function createDeliverable(
   }
 
   // 4. Insertion du livrable en base (status par défaut 'Brouillon')
-  const { error: insertError } = await supabase.from('deliverables').insert({
-    step_id: stepId,
-    title,
-    description: description || null,
-    url,
-    status: 'Brouillon',
-  })
+  //    Le .select('id') est nécessaire pour renseigner l'identifiant de l'objet
+  //    source de l'événement (CT-10), sans relire la table après coup.
+  const { data: deliverable, error: insertError } = await supabase
+    .from('deliverables')
+    .insert({
+      step_id: stepId,
+      title,
+      description: description || null,
+      url,
+      status: 'Brouillon',
+    })
+    .select('id')
+    .single()
 
   if (insertError) {
     return { success: false, error: `Erreur SQL : ${insertError.message}` }
   }
 
-  // 5. Invalidation du cache de la page projet
+  // 5. Contrat CT-10 : signaler l'attachement du livrable à M5.
+  if (deliverable) {
+    await recordEvent({
+      type: 'Livrable attaché',
+      sourceId: deliverable.id,
+      projectId: step.project_id,
+    })
+  }
+
+  // 6. Invalidation du cache de la page projet
   revalidatePath(`/dashboard/projects/${step.project_id}`)
 
   return { success: true }

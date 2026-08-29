@@ -9,8 +9,9 @@
  * 3. Appelle la RPC PostgreSQL create_project_with_steps.
  *    - Crée le projet lié à l'utilisateur courant (auth.uid()).
  *    - Clone atomiquement les 13 étapes du canevas v1.0 dans method_steps.
- * 4. Invalide le cache de la liste des projets.
- * 5. Redirige vers /dashboard/projects.
+ * 4. Émet l'événement « Projet créé » vers M5 (contrat CT-04).
+ * 5. Invalide le cache de la liste des projets.
+ * 6. Redirige vers /dashboard/projects.
  *
  * En cas d'erreur : redirige vers /dashboard/projects/new avec ?error=...
  *
@@ -23,6 +24,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { createClient } from '@/lib/supabase/server'
+import { recordEvent } from '@/modules/m5-mesures/actions/record-event'
 
 const NEW_PROJECT_PATH = '/dashboard/projects/new'
 const PROJECTS_LIST_PATH = '/dashboard/projects'
@@ -73,7 +75,9 @@ export async function createProject(formData: FormData): Promise<void> {
   }
 
   // 4. Insertion atomique via la RPC PL/pgSQL (Projet + 13 Étapes du canevas)
-  const { error } = await supabase.rpc('create_project_with_steps', {
+  //    La RPC est déclarée RETURNS UUID : on capte l'identifiant du projet créé,
+  //    seul moyen de renseigner l'événement sans requête supplémentaire.
+  const { data: newProjectId, error } = await supabase.rpc('create_project_with_steps', {
     p_name: name,
     p_business_problem: businessProblem,
   })
@@ -82,7 +86,18 @@ export async function createProject(formData: FormData): Promise<void> {
     redirectWithError(`Erreur lors de la création : ${error.message}`)
   }
 
-  // 5. Invalidation du cache + redirection
+  // 5. Contrat CT-04 : signaler la transition initiale (∅ → Idée) à M5.
+  //    L'échec de l'instrumentation ne doit jamais empêcher la création :
+  //    recordEvent ne lève pas et son résultat n'est volontairement pas testé ici.
+  if (typeof newProjectId === 'string') {
+    await recordEvent({
+      type: 'Projet créé',
+      sourceId: newProjectId,
+      projectId: newProjectId,
+    })
+  }
+
+  // 6. Invalidation du cache + redirection
   revalidatePath(PROJECTS_LIST_PATH)
   redirect(PROJECTS_LIST_PATH)
 }
