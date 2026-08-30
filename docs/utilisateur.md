@@ -214,10 +214,10 @@ c'est l'adresse publique définitive de cette preuve.
 La preuve est alors visible par n'importe qui, sans compte, sur `/p` et sur sa
 fiche `/p/<slug>`, avec ses boutons de partage LinkedIn et X.
 
-**Compte jusqu'à une minute** avant qu'un changement n'apparaisse sur la
-vitrine : les pages publiques sont mises en cache et se rafraîchissent toutes
-les 60 secondes. Une preuve qui ne s'affiche pas immédiatement n'est pas une
-panne — recharge la page un peu plus tard.
+**La mise en ligne est immédiate.** Les pages publiques sont recalculées à
+chaque visite : ta preuve est consultable dès que tu as cliqué, sans délai de
+cache. Si elle n'apparaît pas, cherche la cause ailleurs — pas dans un délai
+d'attente.
 
 ---
 
@@ -320,7 +320,7 @@ Autant le savoir avant de le chercher :
 | Le bouton **🌟 Preuve publique** est absent | Le livrable est en *Brouillon* : clique **Publier** d'abord. |
 | Le bouton **Archiver** est absent | Le projet est en *Idée* ou *Cadré*. Fais-le avancer jusqu'à *En cours*. |
 | La liste des statuts ne propose pas celui que tu veux | Ce passage n'est pas autorisé depuis le statut actuel — voir le schéma en §4. |
-| Une preuve publiée n'apparaît pas sur `/p` | Le cache public se rafraîchit toutes les 60 secondes. Attends une minute et recharge. |
+| Une preuve publiée n'apparaît pas sur `/p` | Il n'y a pas de délai de cache : l'affichage est immédiat. Vérifie plutôt que la preuve n'a pas été retirée de la vitrine. |
 | `/dashboard/mesures` affiche des zéros | Normal si l'activité est antérieure au journal, ou si les seuls événements viennent de projets `[E2E]`. |
 | Un message d'erreur rouge sous un bouton | L'action a été refusée par une règle de la méthode (transition interdite, champ manquant). Le message dit laquelle. Rien n'a été enregistré. |
 
