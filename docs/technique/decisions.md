@@ -790,3 +790,39 @@ Si à ce moment la valeur reste floue pour l'utilisateur, la priorité devra bas
   Écarté : sérialiser seulement à l'intérieur de `session.spec.ts` (`mode: 'serial'`) — cela n'aurait rien réglé entre fichiers. Coût accepté : une suite E2E locale plus lente, sur 10 tests.
 - **Vérification :**
   Les deux tests passent après sérialisation. Éprouvés par mutation, selon le corollaire adopté en S23 : neutraliser `supabase.auth.signOut()` dans `logout()` fait échouer le test de déconnexion sur l'assertion visée — la route privée reste accessible après le clic. Le test de persistance, lui, a **réellement échoué** avant le passage en `workers: 1`, ce qui vaut démonstration qu'il peut échouer.
+
+---
+
+### DT-Lot5-11 — Domaine propre `methode.sterveshop.cloud` ; remplace DT-Lot0-06
+
+- **Date :** 30/08/2026
+- **Statut :** Accepté — **rend caduque `DT-Lot0-06`** (« URL prod = sous-domaine vercel.app, pas de domaine custom »), qui reste telle quelle dans ce journal.
+- **Contexte :**
+  `DT-Lot0-06` écartait le domaine personnalisé comme un coût inutile « tant que le projet n'est pas exposé publiquement ». Il l'est désormais : le MVP est clos (`v1.0.0-mvp`) et la vitrine porte une preuve réelle. `DT-Lot4-03` avait anticipé ce sous-domaine et préparé la base pour qu'aucune URL absolue n'y soit stockée.
+- **Décisions :**
+
+  **1. L'adresse publique devient `methode.sterveshop.cloud`.**
+  Sous-domaine d'un domaine déjà possédé — aucun achat. Branché par un `CNAME` chez Hostinger, plus un `TXT _vercel` de preuve de propriété, le domaine étant déjà revendiqué par un autre compte Vercel (celui de `dashboard` et `boutique`).
+
+  Écarté : déléguer les serveurs de noms à Vercel. Cela lui aurait confié **tout** `sterveshop.cloud` — VPS, messagerie, deux autres projets. Un sous-domaine ne justifie pas de déplacer la zone entière.
+
+  **2. L'ancienne `.vercel.app` redirige vers la nouvelle.**
+  Une seule adresse canonique. Les preuves déjà partagées restent valides, et aucun contenu n'est servi sous deux adresses concurrentes.
+
+  **3. Une seule fonction résout l'URL publique : `resolveSiteUrl()` (`src/lib/site-url.ts`).**
+  `DT-Lot4-03` promettait une migration « transparente, sans modification de code ». Elle ne l'était qu'à moitié : `generate-post-draft.ts` résolvait bien au runtime, mais `p/[slug]/page.tsx` portait l'URL **en dur**.
+
+  Défaut mesuré, pas déduit : une fiche servie sur le nouveau domaine annonçait encore `og:url = https://methode-architecte-ia.vercel.app/...`. Un partage LinkedIn depuis la nouvelle adresse aurait affiché l'ancienne.
+
+  Les deux implémentations sont fusionnées. `CANONICAL_SITE_URL` sert de repli hors Vercel.
+- **Vérification :** (30/08/2026, après propagation DNS)
+
+  | Contrôle | Résultat |
+  |---|---|
+  | Résolution DNS | `methode.sterveshop.cloud` → `b4436807853e00b7.vercel-dns-017.com` → IP Vercel |
+  | `GET /p` | **200**, certificat HTTPS valide |
+  | `GET /dashboard` en anonyme | **307** — la protection suit sur le nouveau domaine |
+  | `dashboard.sterveshop.cloud` | **307** — intact |
+  | `boutique.sterveshop.cloud` | **200** — intact |
+
+  Le contrôle de non-régression sur les deux autres sous-domaines n'était pas facultatif : l'enregistrement `TXT _vercel` existant appartenait à `dashboard`, et l'écraser au lieu d'en ajouter un second aurait cassé sa vérification de propriété.

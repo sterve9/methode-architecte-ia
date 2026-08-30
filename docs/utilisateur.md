@@ -18,7 +18,10 @@ Le système a **deux faces** :
 | Vitrine publique | `/p` et `/p/<slug>` | Tout le monde, sans compte |
 | Espace personnel | `/dashboard` et tout ce qui est en dessous | Toi seul, connecté |
 
-En production : <https://methode-architecte-ia.vercel.app>
+En production : <https://methode.sterveshop.cloud>
+
+L'ancienne adresse `methode-architecte-ia.vercel.app` redirige vers celle-ci :
+tes anciens liens partagés continuent de fonctionner.
 
 Toute adresse commençant par `/dashboard` renvoie vers `/login` si tu n'es pas
 connecté. C'est voulu : rien de privé n'est atteignable sans session.

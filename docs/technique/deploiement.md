@@ -37,7 +37,7 @@ Développeur local
 │ │ - déploiement │ │
 │ └──────────────────┘ │
 │ │
-│ URL : methode-architecte-ia.vercel.app │
+│ URL : methode.sterveshop.cloud        │
 └─────────────────────────────────────────┘
 
 text
@@ -112,7 +112,8 @@ Un badge vert = tout est OK. Un badge rouge = un des 6 steps a échoué. Cliquer
 
 ### Environnements Vercel
 
-- **Production** : déploiement de la branche `main` — URL fixe `methode-architecte-ia.vercel.app`
+- **Production** : déploiement de la branche `main` — URL fixe `methode.sterveshop.cloud`
+  (l'ancienne `methode-architecte-ia.vercel.app` redirige vers elle — DT-Lot5-11)
 - **Preview** : déploiement automatique de chaque Pull Request — URL unique générée par PR
 
 ---
@@ -139,7 +140,7 @@ Un badge vert = tout est OK. Un badge rouge = un des 6 steps a échoué. Cliquer
 ### Que voir pour vérifier
 
 - **CI OK** : badge vert dans l'onglet Actions du repo GitHub
-- **Deploy OK** : URL prod accessible sans erreur → [https://methode-architecte-ia.vercel.app](https://methode-architecte-ia.vercel.app)
+- **Deploy OK** : URL prod accessible sans erreur → [https://methode.sterveshop.cloud](https://methode.sterveshop.cloud)
 
 ---
 
@@ -178,5 +179,5 @@ Ressource	URL
 Repo GitHub	https://github.com/sterve9/methode-architecte-ia
 GitHub Actions	https://github.com/sterve9/methode-architecte-ia/actions
 Dashboard Vercel	https://vercel.com/sterve/methode-architecte-ia
-URL Production	https://methode-architecte-ia.vercel.app
+URL Production	https://methode.sterveshop.cloud
 Dashboard Supabase	https://supabase.com/dashboard/project/tegcvrdejkwysrtxdvnx

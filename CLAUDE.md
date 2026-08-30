@@ -8,7 +8,7 @@
 - Repo : https://github.com/sterve9/methode-architecte-ia
 - Emplacement local : `C:\Dev\02_Développement\methode-architecte-ia`
 - Shell : Git Bash
-- URL prod : https://methode-architecte-ia.vercel.app
+- URL prod : https://methode.sterveshop.cloud (l'ancienne `methode-architecte-ia.vercel.app` y redirige — DT-Lot5-11)
 
 ## Nature du projet
 
