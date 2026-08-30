@@ -27,13 +27,15 @@ Particularité méta : ce dépôt **applique sa propre méthode à lui-même**. 
 - **Stack** : Next.js 16 (App Router) + React 19 + Supabase (`@supabase/ssr`, auth + Postgres) + Tailwind v4 + Vitest (unit) + Playwright (e2e).
 - Next.js 16 casse des conventions connues du training — voir la règle en tête de ce fichier (`node_modules/next/dist/docs/`) avant d'écrire du code Next.
 
-## État d'avancement (dernier jalon : Lot 4 clos, 24/08/2026)
+## État d'avancement (dernier jalon : Lot 5 clos, 30/08/2026 — tous les lots du MVP livrés)
 
-- Lots 0 à 4 **clos et tagués** : v0.1.0-lot0 (auth non incluse) → v0.2.0-lot1 (auth) → v0.4.0-lot2 (M1 complet) → v0.5.0-lot3 (M2 complet) → v0.6.0-lot4 (M3 preuves publiques). Prod sur Vercel.
-- CI GitHub Actions : verte (cassée depuis S19 sur des erreurs ESLint dans le lot M3, corrigée en S20 — dernière vérification sur le commit `e58849f`).
-- Modules implémentés : **M1 Projets**, **M2 Méthode** (chaque projet clone ses 13 étapes via une RPC Postgres transactionnelle `create_project_with_steps`), **M3 Preuves** (publication de livrables, vitrine `/p` et fiche `/p/[slug]`).
-- Modules encore à l'état de coquille (`.gitkeep` seul) : M4 Diffusion, M5 Mesures, M6 Missions, M7 Consultation. Noter que `/p` et `/p/[slug]` (rôle normalement dévolu à M7) sont actuellement implémentés directement dans `src/app/p/` en consommant les queries de M3 — pas encore un module M7 séparé.
-- **Décision DT-Lot4-04** : le Lot 5 est mis en pause. Constat en fin de Lot 4 : la valeur perçue de la vitrine publique restait floue tant que l'UX est brute et les données factices.
+- Lots 0 à 5 **clos et tagués** : v0.1.0-lot0 (auth non incluse) → v0.2.0-lot1 (auth) → v0.4.0-lot2 (M1 complet) → v0.5.0-lot3 (M2 complet) → v0.6.0-lot4 (M3 preuves publiques) → v0.7.0-lot5 (M5 instrumentation). Prod sur Vercel.
+- CI GitHub Actions : verte (dernière vérification sur le commit `8e9da07`).
+- Suite de tests : **127 tests unitaires** (Vitest) + **8 tests E2E** (Playwright), verts en CI. Lancer le test de chaîne critique écrit en base de production : 4 événements non supprimables par exécution.
+- Modules implémentés : **M1 Projets**, **M2 Méthode** (chaque projet clone ses 13 étapes via une RPC Postgres transactionnelle `create_project_with_steps`), **M3 Preuves** (publication de livrables, vitrine `/p` et fiche `/p/[slug]`), **M4 Diffusion** (génération assistée d'un brouillon de post LinkedIn/X, copier-coller manuel — aucune publication automatique), **M5 Mesures** (table `events` append-only, `recordEvent()` unique point d'écriture, consultation interne sur `/dashboard/mesures`).
+- Modules encore à l'état de coquille (`.gitkeep` seul) : **M6 Missions**, **M7 Consultation**. Noter que `/p` et `/p/[slug]` (rôle normalement dévolu à M7) sont implémentés directement dans `src/app/p/` en consommant les queries de M3, et que `/dashboard/mesures` consomme M5 de la même façon — entorse connue à CA-06, pas encore un module M7 séparé.
+- **Migrations Supabase : geste manuel obligatoire.** Il n'y a ni CLI Supabase ni `psql` sur la machine, et `.env.local` ne porte que la clé `anon`. Toute migration se joue à la main dans le SQL Editor Supabase, puis est versionnée dans `supabase/migrations/`.
+- **Décision DT-Lot4-04 (mise en pause du Lot 5) : dépréciée.** La pause a été levée et le Lot 5 livré en S23. Conservée telle quelle dans `docs/technique/decisions.md`, qui n'est jamais réécrit.
 
 ## Séance en cours
 
