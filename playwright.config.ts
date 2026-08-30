@@ -13,7 +13,13 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // Un seul worker, y compris en local. Le système n'a qu'UN compte
+  // (DT-Lot1-01) : tous les tests authentifiés partagent donc la même
+  // session. Or `signOut()` de Supabase est global par défaut — il révoque
+  // les jetons sur toutes les sessions ouvertes. Deux specs authentifiées en
+  // parallèle se coupent l'herbe sous le pied (constaté en S24 : le test de
+  // déconnexion tuait la session du test de persistance).
+  workers: 1,
   reporter: 'list',
   use: {
     baseURL,

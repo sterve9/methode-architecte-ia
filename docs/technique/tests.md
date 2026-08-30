@@ -124,8 +124,15 @@ de sortie du MVP. **Elle est à relire à chaque lot.**
 | `queries/` (M1, M2, M3, M5) | Aucun test unitaire. | Ce sont des enveloppes de requêtes Supabase : les doubler ne testerait que le double. Couvertes indirectement par le E2E. |
 | Composants `ui/` | Aucun test de rendu, alors que Vitest tourne sous `jsdom` et en serait capable. | Le rendu est vérifié par le E2E sur le parcours critique. Un test de rendu deviendra utile le jour où un composant portera de la logique. |
 | Migrations SQL et policies RLS | Aucun test automatisé. | Vérifiées à la main via l'API REST Supabase, en `anon` et en authentifié (voir la section « Vérification » de `DT-Lot5-09` pour le protocole). |
-| Refresh de session du proxy | `isPublicPath` est testée unitairement, mais pas `updateSession` : le rafraîchissement des cookies Supabase n'est éprouvé qu'à l'usage. | Il n'a commencé à tourner qu'au Lot 5 (`DT-Lot5-07`). Premier suspect en cas de déconnexion inattendue. |
+| Refresh de session du proxy | `isPublicPath` est testée unitairement, et `session.spec.ts` prouve depuis la S24 qu'une session survit à un rechargement de page. Reste non couvert : le rafraîchissement quand le jeton d'accès a **réellement expiré**. | Un test honnête devrait attendre l'expiration effective du jeton. Reste le premier suspect en cas de déconnexion inattendue. |
 | Génération de posts (M4) | L'appel réel à l'API Anthropic. Seuls `build-post-prompt` et `parse-post-draft` sont testés. | Décision de coût explicite : la CI tourne à chaque push, chaque génération est payante. Conséquence : le rendu sur une variété de contenus réels reste inconnu. |
+
+Un comportement à connaître avant d'ajouter une spec authentifiée :
+`supabase.auth.signOut()` est **global par défaut** — il révoque les jetons de
+toutes les sessions ouvertes de l'utilisateur. Comme le système n'a qu'un seul
+compte (`DT-Lot1-01`), deux specs authentifiées en parallèle se coupent la
+session mutuellement. D'où `workers: 1` dans `playwright.config.ts`, y compris
+en local. Constaté en S24 en écrivant `session.spec.ts`.
 
 Deux effets de bord connus du test E2E, tracés ailleurs mais rappelés ici :
 
