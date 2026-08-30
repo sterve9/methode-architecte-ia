@@ -764,3 +764,29 @@ Si à ce moment la valeur reste floue pour l'utilisateur, la priorité devra bas
   Les 4 lignes portent le même `project_id`, dans l'ordre chronologique du parcours, chacune avec le `source_type` que `sourceTypeForEvent()` lui associe. La table était vide avant le run : ces lignes ne peuvent venir que des Server Actions.
 
   Suite complète verte : lint, build, **30 tests unitaires**, **8 tests E2E**.
+
+---
+
+### DT-Lot5-10 — La déconnexion reste globale (tous appareils), et la suite E2E passe en worker unique
+
+- **Date :** 30/08/2026
+- **Statut :** Accepté — décision de clôture du MVP (S24)
+- **Contexte :**
+  En écrivant `e2e/session.spec.ts` pour combler deux critères de sortie du Lot 1 jamais mesurés, le test de persistance de session a échoué de façon inexpliquée : la session mourait entre le rechargement de page et la navigation suivante.
+
+  Cause réelle, vérifiée dans la documentation du paquet installé (`@supabase/auth-js`) : **`signOut()` a une portée `global` par défaut**, qui révoque les jetons de rafraîchissement de *toutes* les sessions ouvertes de l'utilisateur, pas seulement celle du navigateur courant. `logout()` (`src/app/dashboard/actions.ts`) l'appelle sans préciser de portée.
+
+  Le système n'ayant qu'un seul compte (`DT-Lot1-01`), les deux tests partageaient la même session : celui de déconnexion tuait celle de l'autre, en parallèle.
+- **Décisions :**
+
+  **1. La portée globale est conservée, et devient un choix assumé.**
+  Se déconnecter ferme la session sur tous les appareils. Écarté : `signOut({ scope: 'local' })`, plus conforme à l'attente courante d'un bouton de déconnexion. Motifs du maintien : pour un système à compte unique dont ce compte commande toute la vitrine publique, « me déconnecter partout » est un geste de sécurité utile ; et modifier un comportement applicatif le jour de la clôture du MVP se paie plus cher que de le documenter.
+
+  Ce qui change n'est donc pas le code mais son statut : **ce n'était pas une décision, c'était un défaut subi.** Il est désormais décidé, et écrit dans `docs/utilisateur.md` pour que l'utilisateur ne le découvre pas par surprise.
+
+  **2. `workers: 1` devient inconditionnel dans `playwright.config.ts`.**
+  La configuration ne sérialisait qu'en CI. Or avec **un seul compte**, deux specs authentifiées ne peuvent pas tourner en parallèle sans risque : n'importe quelle déconnexion coupe les autres. Le danger n'était pas théorique — il aurait fait échouer `chaine-critique.spec.ts` de façon intermittente en local, c'est-à-dire le test le plus important du dépôt, pour une cause introuvable.
+
+  Écarté : sérialiser seulement à l'intérieur de `session.spec.ts` (`mode: 'serial'`) — cela n'aurait rien réglé entre fichiers. Coût accepté : une suite E2E locale plus lente, sur 10 tests.
+- **Vérification :**
+  Les deux tests passent après sérialisation. Éprouvés par mutation, selon le corollaire adopté en S23 : neutraliser `supabase.auth.signOut()` dans `logout()` fait échouer le test de déconnexion sur l'assertion visée — la route privée reste accessible après le clic. Le test de persistance, lui, a **réellement échoué** avant le passage en `workers: 1`, ce qui vaut démonstration qu'il peut échouer.

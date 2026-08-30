@@ -59,6 +59,11 @@ depuis la console Supabase, pas depuis l'application.
 
 Pour te déconnecter : bouton **Se déconnecter**, en bas de `/dashboard`.
 
+⚠️ **La déconnexion vaut pour tous tes appareils à la fois.** Te déconnecter
+sur ton ordinateur ferme aussi ta session sur ton téléphone. C'est voulu : ton
+compte unique commande tout ce qui est publié, donc « me déconnecter » veut
+dire partout. Si tu veux juste fermer l'onglet, ferme-le — ne clique pas.
+
 Si tu te retrouves sur `/login` alors que tu te croyais connecté, ta session a
 expiré : reconnecte-toi, rien n'est perdu.
 
