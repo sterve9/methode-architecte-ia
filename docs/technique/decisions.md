@@ -826,3 +826,15 @@ Si à ce moment la valeur reste floue pour l'utilisateur, la priorité devra bas
   | `boutique.sterveshop.cloud` | **200** — intact |
 
   Le contrôle de non-régression sur les deux autres sous-domaines n'était pas facultatif : l'enregistrement `TXT _vercel` existant appartenait à `dashboard`, et l'écraser au lieu d'en ajouter un second aurait cassé sa vérification de propriété.
+
+  **Après mise en place de la redirection et déploiement du correctif :**
+
+  | Contrôle | Résultat |
+  |---|---|
+  | `GET https://methode-architecte-ia.vercel.app/p` | **308** → `https://methode.sterveshop.cloud/p` |
+  | Un ancien lien de preuve, suivi jusqu'au bout | **200** sur le nouveau domaine, **slug identique** |
+  | `og:url` d'une fiche servie sur le nouveau domaine | `https://methode.sterveshop.cloud/p/...` |
+
+  La deuxième ligne valide `DT-Lot4-03` sur le terrain : parce que la base ne stocke que le `slug` et jamais d'URL absolue, un lien partagé avant la migration reste valide après, sans aucune écriture en base.
+
+  La troisième confirme que `VERCEL_PROJECT_PRODUCTION_URL` renvoie bien le **domaine personnalisé** et non le sous-domaine `.vercel.app` — point qui n'était pas acquis avant d'être mesuré, et dont dépendait le choix d'implémentation de `resolveSiteUrl()`.
