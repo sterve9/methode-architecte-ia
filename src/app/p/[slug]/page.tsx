@@ -2,11 +2,10 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
+import { resolveSiteUrl } from '@/lib/site-url'
 import { getProofBySlug } from '@/modules/m3-preuves/queries/get-proof-by-slug'
 
 export const revalidate = 60 // Revalidation ISR toutes les 60 secondes
-
-const SITE_URL = 'https://methode-architecte-ia.vercel.app'
 
 interface PublicProofPageProps {
   params: Promise<{ slug: string }>
@@ -28,7 +27,7 @@ export async function generateMetadata({
     openGraph: {
       title: proof.title,
       description: proof.summary,
-      url: `${SITE_URL}/p/${proof.slug}`,
+      url: `${resolveSiteUrl()}/p/${proof.slug}`,
       type: 'article',
       images: proof.image_url ? [{ url: proof.image_url }] : undefined,
     },
@@ -49,7 +48,7 @@ export default async function PublicProofPage({ params }: PublicProofPageProps) 
     notFound()
   }
 
-  const pageUrl = `${SITE_URL}/p/${proof.slug}`
+  const pageUrl = `${resolveSiteUrl()}/p/${proof.slug}`
   const linkedInShareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pageUrl)}`
   const xShareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(pageUrl)}&text=${encodeURIComponent(proof.title)}`
 

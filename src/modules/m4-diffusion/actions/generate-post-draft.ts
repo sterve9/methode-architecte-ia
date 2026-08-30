@@ -22,17 +22,12 @@ import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
 import { getProofForDiffusion } from '@/modules/m3-preuves/queries/get-proof-for-diffusion'
 import { buildPostPrompt } from '../domain/build-post-prompt'
+import { resolveSiteUrl } from '@/lib/site-url'
 import { parsePostDraft } from '../domain/parse-post-draft'
 import type { DiffusionChannel, GeneratePostResult } from '../types'
 
 const MODEL = 'claude-opus-5'
 const MAX_TOKENS = 8000
-
-/** Base publique utilisée pour construire l'URL de la preuve (DT-Lot4-03). */
-function resolveSiteUrl(): string {
-  const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
-  return vercelUrl ? `https://${vercelUrl}` : 'https://methode-architecte-ia.vercel.app'
-}
 
 export async function generatePostDraft(
   proofId: string,
