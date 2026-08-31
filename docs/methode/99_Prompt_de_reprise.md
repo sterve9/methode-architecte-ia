@@ -1,5 +1,5 @@
-REPRISE SESSION — MÉTHODE ARCHITECTE IA — SÉANCE 24 (S24)
-DERNIER VERROU DU MVP — docs/utilisateur.md
+REPRISE SESSION — MÉTHODE ARCHITECTE IA — SÉANCE 25 (S25)
+LE MVP EST CLOS — QUE PRODUIT-ON MAINTENANT ?
 ═══════════════════════════════════════════════════════════════
 
 ℹ️ Ce fichier ne décrit QUE ce qui est propre à la séance en cours
@@ -9,222 +9,240 @@ figé par lot — vit dans CLAUDE.md à la racine du dépôt et n'est plus
 répété ici.
 
 ═══════════════════════════════════════════════════════════════
-📌 BILAN SÉANCE PRÉCÉDENTE (S23)
+📌 BILAN SÉANCE PRÉCÉDENTE (S24)
 ═══════════════════════════════════════════════════════════════
 
-Séance longue. Le plan annoncé (étapes 0 à 4) a été exécuté en entier,
-puis étendu d'un chantier que l'audit final a rendu nécessaire.
+Le plan annoncé (étapes 0 à 3) a été exécuté, sauf l'étape 3 — remplacée
+en cours de route par un chantier non prévu : le domaine propre.
 
-── Le Lot 5 est OUVERT ET CLOS — tag `v0.7.0-lot5` ──
+── LE MVP EST TERMINÉ — tag `v1.0.0-mvp` ──
 
-Le dernier lot du MVP est livré. Périmètre tenu, sans extension :
+13 commits, CI verte sur `9a1ca81`. Les 7 conditions de sortie de
+`11.Plan_Implementation.md` §7 sont satisfaites **et mesurées une par une**,
+pas déduites de l'existence des tags.
 
-- Table `events` (migration `20260829233704_create_events_table.sql`),
-  appliquée à la main dans le SQL Editor Supabase — il n'y a toujours ni CLI
-  Supabase ni `psql` sur la machine, et `.env.local` ne porte que la clé
-  `anon`. **Toute future migration passera par le même geste manuel.**
-- Module `m5-mesures` : `recordEvent()` est le seul point d'écriture.
-- Les 4 événements clés émis depuis les Server Actions existantes.
-- Consultation interne sur `/dashboard/mesures`.
-- ADR `DT-Lot5-09` (modèle du journal) et `DT-Lot5-08` (outillage GitHub).
+Bilan des cases : **50 cochées sur 51**.
 
-Trois choix de conception à ne pas rouvrir sans raison nouvelle :
+La 51ᵉ reste vide **volontairement, et pour toujours** : « Aucun lot livré
+sans respecter les règles de mise à jour applicables » est historiquement
+faux — RM-01 a été enfreinte aux lots 2, 3 et 4, et aucune réparation ne
+rend cette condition vraie rétroactivement. Elle porte sa note en dessous.
+**Ne pas la cocher lors d'une future relecture.**
 
-1. **Référence polymorphe assumée** : `source_id UUID` sans FK, qualifié par
-   `source_type` sous CHECK. Une FK ne peut viser qu'une table, or les 4
-   événements pointent vers 4 tables. La cohérence du couple est tenue côté
-   applicatif par `sourceTypeForEvent()`. `project_id` est une vraie FK.
-2. **Journal append-only** : aucune policy UPDATE, aucune policy DELETE. Un
-   journal réécrivable ne vaut rien comme mesure.
-3. **`recordEvent()` n'est PAS une Server Action** (pas de `'use server'`) et
-   **ne lève jamais**. La marquer `'use server'` en ferait un point d'entrée
-   réseau, donc un moyen de forger des événements. Et l'instrumentation
-   observe la chaîne de valeur, elle ne la commande pas.
+── Décision de méthode : RM-03 précisée (révision explicite) ──
 
-── La leçon de la S22 a été appliquée, pas récitée ──
+Cocher une condition de sortie est un **constat d'avancement**, pas une
+révision de méthode. Deux verrous encadrent l'ouverture :
 
-Rien n'a été déclaré sur la foi du code. Deux mesures réelles :
+1. Seul le caractère de la case change. **Toucher un mot d'un critère
+   relève de RM-03**, sans discussion.
+2. Une case ne se coche que **contre une mesure effectuée et nommée au
+   moment où on coche**, jamais contre une conviction.
 
-- **Frontière publique, sur l'API REST Supabase hors application** : `anon`
-  refusé en **lecture ET en écriture** (`42501 permission denied`), authentifié
-  en 200. Le refus tombe au niveau du GRANT, donc avant même la RLS.
-- **Écriture effective** : 3 passages de la chaîne critique (1 local, 2 depuis
-  la CI) → **12 événements, exactement 4 par run**, même ordre à chaque fois,
-  relus directement en base. L'instrumentation est reproductible et fonctionne
-  aussi depuis l'environnement déployé.
+Le verrou 1 a été vérifié par diff normalisé sur `11` et `12` : aucune
+ligne n'a bougé en dehors des cases.
 
-── L'audit des conditions de sortie du MVP a trouvé un vrai trou ──
+── Trois défauts trouvés EN MESURANT, invisibles à la relecture ──
 
-Sur les 7 conditions de `11.Plan_Implementation.md` §7, **6 sont désormais
-satisfaites**. La découverte : `12.Strategie_Tests.md` §8 impose des tests
-unitaires de domaine à chaque lot, et **trois lots avaient été tagués sans
-les leurs** — lots 2, 3 et 4, plus le lot 1. Les 30 tests verts couvraient
-bien, mais pas là.
+1. **`export const revalidate = 60` est inerte** sur `/p` et `/p/[slug]`.
+   Ces pages appellent `createClient()` → `cookies()`, ce qui les bascule
+   en rendu dynamique. Le build le dit : `ƒ (Dynamic)`. La doc utilisateur
+   annonçait un délai de cache qui n'existe pas — corrigé.
+   ⚠️ **La déclaration morte est toujours dans le code** (angle mort n°7).
 
-Comblé dans la foulée : **30 → 127 tests unitaires**. Les matrices attendues
-sont recopiées depuis `05.Cycle_de_Vie.md` **sans importer les tables du code
-testé**, sinon les tests se valideraient eux-mêmes. Vérifié par mutation :
-altérer la seule transition `Idée → Livré` fait tomber 3 tests.
+2. **`signOut()` est global par défaut** : se déconnecter révoque les
+   jetons de TOUS les appareils. Personne ne l'avait décidé. C'est
+   désormais un choix assumé (`DT-Lot5-10`), écrit dans le guide utilisateur.
+   Conséquence technique : `workers: 1` devient inconditionnel dans
+   `playwright.config.ts` — avec un seul compte, deux specs authentifiées
+   en parallèle se coupent la session mutuellement.
 
-`isPublicPath` a été **exportée** de `src/lib/supabase/middleware.ts` pour
-cela — c'est l'allowlist qui décide de ce qui est public, elle ne devait pas
-dépendre du seul E2E.
+3. **`06.Composants.md` contredisait bien M4** — angle mort resté
+   « NON VÉRIFIÉ » pendant des séances. La fiche C4 décrivait une diffusion
+   automatisée avec objet `Canal de diffusion` et historisation. Révisée
+   sous RM-03, en citant `DT-Lot5-04` : le pivot était décidé **avant**
+   l'implémentation, la doc rattrape une décision antérieure — elle ne
+   justifie pas après coup.
 
-Seconde exigence du §9 traitée aussi : `docs/technique/tests.md` §5 liste
-maintenant les **6 zones non testées automatiquement** et le risque assumé
-pour chacune.
+── Deux critères du Lot 1 enfin mesurés ──
 
-── Étape 0 : le MCP github est abandonné (DT-Lot5-08) ──
+`e2e/session.spec.ts` couvre la persistance de session après rechargement
+et la déconnexion effective. **Éprouvés par mutation** : neutraliser
+`signOut()` fait tomber le test sur l'assertion visée. Le test de
+persistance, lui, a réellement échoué avant `workers: 1` — ça vaut
+démonstration. Suite E2E : **8 → 10 tests**.
 
-La réparation à froid de la S22 avait tenu (entrée propre, aucun secret), mais
-la connexion échoue pour une raison **nouvelle** : le serveur ne propose pas
-l'enregistrement dynamique de client attendu pour ouvrir l'OAuth. Rien qui se
-règle côté dépôt. Décision : ne pas insister, l'API GitHub anonyme reste le
-canal de lecture de la CI. Le fichier `.bak` qui contenait le PAT en clair a
-été **supprimé**.
+── Le domaine propre : `https://methode.sterveshop.cloud` ──
 
-État technique en fin de séance : lint, build, **127 tests unitaires**,
-**8 tests E2E** verts. CI verte sur `8e9da07`. Production vérifiée
-(`/dashboard/mesures` en 307 → `/login` en anonyme, vitrine toujours en 200).
+`DT-Lot5-11` **rend caduque `DT-Lot0-06`** (« pas de domaine custom »).
+Branché par CNAME chez Hostinger + TXT `_vercel` de preuve de propriété,
+le domaine étant déjà revendiqué par un autre compte Vercel (`dashboard`,
+`boutique`). **La délégation des serveurs de noms à Vercel a été refusée** :
+elle aurait emporté le VPS, la messagerie et deux autres projets.
 
-═══════════════════════════════════════════════════════════════
-🎯 OBJECTIF S24 — ÉCRIRE docs/utilisateur.md ET CLORE LE MVP
-═══════════════════════════════════════════════════════════════
+L'ancienne `.vercel.app` renvoie un **308 permanent** vers la nouvelle.
 
-**Il reste UNE condition de sortie du MVP sur sept.** Aucune ne relève
-d'un lot restant : tous les lots sont livrés et tagués.
+Au passage, `DT-Lot4-03` promettait une migration sans modification de code.
+Elle ne l'était qu'à moitié : `p/[slug]/page.tsx` portait l'URL **en dur**,
+et une fiche servie sur le nouveau domaine annonçait encore l'ancien dans
+son `og:url`. Les deux implémentations sont fusionnées dans
+`resolveSiteUrl()` (`src/lib/site-url.ts`).
 
-Condition n°7 (`13.Documentation.md` §9) : `docs/utilisateur.md` doit exister
-et couvrir les parcours clés. **Ce fichier n'a jamais été écrit, à aucun lot.**
-La règle RM-01 a donc été enfreinte à plusieurs reprises. C'est la dette
-documentaire la plus ancienne du projet.
+Mesuré après coup : un ancien lien de preuve suit le 308 et arrive en 200
+sur le nouveau domaine, **slug identique**. `DT-Lot4-03` (aucune URL absolue
+en base) est validée sur le terrain.
 
-Les 8 parcours à couvrir :
+── Ménage de sécurité ──
 
-1. Se connecter
-2. Créer un projet
-3. Suivre les étapes de la méthode
-4. Attacher un livrable à une étape
-5. Publier un livrable
-6. Transformer un livrable en preuve publique
-7. Retirer une preuve de la vitrine
-8. Générer un post de diffusion depuis une preuve
+Le PAT GitHub de la S22 est **révoqué**, ainsi qu'une seconde clé morte
+(`VPS-git-pull-sterveshop`). `git fetch` vérifié après coup : rien cassé.
+La clé `ai-automation-skills-audit`, vivante, a été laissée intacte.
 
-⚠️ **Ne rien inventer** : `e2e/chaine-critique.spec.ts` parcourt réellement
-les 7 premiers et cite les libellés exacts des boutons et des champs. C'est la
-source la plus fiable de ce que l'interface fait vraiment. Le parcours 8 est
-couvert par `/dashboard/diffusion`.
+`Site URL` de Supabase était resté sur `http://localhost:3000` **depuis le
+premier jour** — un lien de réinitialisation de mot de passe aurait été
+injoignable depuis un autre appareil. Corrigé, et vérifié par rechargement.
 
 ═══════════════════════════════════════════════════════════════
-📋 PLAN DE TRAVAIL S24
+🎯 OBJECTIF S25 — DÉCIDER DE L'APRÈS-MVP
 ═══════════════════════════════════════════════════════════════
 
-Étape 0 — Révoquer le PAT GitHub sur github.com/settings/tokens (geste resté
-          en suspens, voir angle mort n°8). Puis niveau d'énergie & calibrage.
+**L'étape 3 de la S24 n'a pas été faite.** Le chantier du domaine a pris sa
+place — utilement, mais la question reste entière :
 
-Étape 1 — Écrire `docs/utilisateur.md`, les 8 parcours.
-          Public visé : l'utilisateur unique dans six mois, pas un développeur.
-          Ce n'est pas de la doc technique : `docs/technique/` couvre déjà ça.
+> Le premier projet de démonstration de la méthode, c'est ce système.
+> Le MVP terminé est donc lui-même une preuve publiable.
+> **Est-ce la prochaine preuve à produire ?**
 
-Étape 2 — Re-vérifier les 7 conditions de `11.Plan_Implementation.md` §7 une
-          par une, puis **déclarer le MVP terminé et poser le tag**.
-          ⚠️ Question à trancher explicitement à ce moment : les cases à cocher
-          des fichiers méthode (`11` §7, `12` §9, `13` §9) n'ont **jamais** été
-          cochées, y compris pour des conditions désormais satisfaites. Les
-          cocher relève-t-il de RM-03 (révision de méthode explicite) ou du
-          simple constat d'avancement ? Décider une fois pour toutes.
+Ce n'est pas une question rhétorique. Le projet a deux objectifs (voir
+CLAUDE.md) : produire des preuves publiques, ET tenir un système où le temps
+de mise en preuve ne dépasse pas le temps du projet. Un MVP clos qui ne
+produit aucune preuve échoue au premier objectif.
 
-Étape 3 — Décider de l'après-MVP. Le premier projet de démonstration de la
-          méthode, c'est ce système : le MVP terminé est lui-même une preuve
-          publiable. À trancher : est-ce la prochaine preuve à produire ?
+Matière disponible pour cette preuve, si elle est retenue :
+- 6 lots livrés, 51 conditions de sortie dont 50 mesurées ;
+- 127 tests unitaires, 10 E2E, CI verte ;
+- 11 décisions d'architecture tracées sur le seul Lot 5 ;
+- et surtout **la manière** : trois défauts trouvés en mesurant, que
+  personne n'aurait vus en relisant le code.
+
+⚠️ Rappel : `/dashboard/mesures` affichera **0 partout** pour ce projet.
+La table `events` est postérieure aux 3 projets réels. Ce n'est pas une
+panne (angle mort n°3).
+
+═══════════════════════════════════════════════════════════════
+📋 PLAN DE TRAVAIL S25 (proposition, à valider en début de séance)
+═══════════════════════════════════════════════════════════════
+
+Étape 0 — Niveau d'énergie & calibrage. Vérifier que la prod répond
+          toujours sur le nouveau domaine.
+
+Étape 1 — Trancher l'objectif : le MVP devient-il une preuve publique ?
+          Si oui → créer le projet, le suivre, produire la preuve. C'est le
+          premier passage complet de la chaîne sur un projet réel **depuis**
+          la mise en place de `events` : ce sera aussi la première cadence
+          réelle mesurée.
+
+Étape 2 — Selon la réponse, l'un des chantiers de la liste ci-dessous.
 
 ═══════════════════════════════════════════════════════════════
 💡 PISTES OUVERTES, NON PRIORITAIRES
 ═══════════════════════════════════════════════════════════════
 
-- Formaliser M7 Consultation : `/p` et `/p/[slug]` vivent toujours dans
-  `src/app/p/` en consommant M3 directement (entorse connue à CA-06). Le
-  contrat CT-09 existe, le chantier est débloqué. **`/dashboard/mesures`
-  consomme M5 de la même façon** — même entorse, même chantier.
-- Instrumenter les autres transitions de projet (écart connu avec CT-04, voir
-  DT-Lot5-09) : ajouter `from_status`/`to_status` en migration additive.
-- M4 : un second canal ou un choix de ton au moment de générer.
-- La génération de posts est volontairement hors CI (appel payant à chaque
-  push). Ne pas l'y ajouter sans décision explicite.
+- **Formaliser M7 Consultation** : `/p`, `/p/[slug]` et `/dashboard/mesures`
+  consomment M3 et M5 directement depuis `src/app/`. Entorse connue à CA-06,
+  contrat CT-09 déjà écrit, chantier débloqué.
+- **Instrumenter les autres transitions de projet** : écart connu avec CT-04
+  (voir `DT-Lot5-09`), à combler par migration additive `from_status` /
+  `to_status`.
+- **`UpdateProofInput` est déclaré mais importé nulle part** : une preuve
+  publiée ne peut être ni corrigée ni renommée, seulement retirée. Manque
+  produit réel, non bloquant.
+- M4 : un second canal, ou un choix de ton à la génération.
+- La génération de posts reste **volontairement hors CI** (appel payant à
+  chaque push). Ne pas l'y ajouter sans décision explicite.
 
 ═══════════════════════════════════════════════════════════════
-🕳️ ANGLES MORTS CONNUS EN FIN DE S23
+🕳️ ANGLES MORTS CONNUS EN FIN DE S24
 ═══════════════════════════════════════════════════════════════
 
-✅ RÉSOLU EN S23 — l'ancien angle mort « aucune vérification que les règles
-minimales de tests par lot sont appliquées » : audit fait, 4 lots comblés,
-127 tests, zones non testées listées dans `tests.md` §5.
+✅ RÉSOLUS EN S24 — `docs/utilisateur.md` (écrit), `06.Composants.md`
+   (révisé), le PAT GitHub (révoqué), et deux critères du Lot 1 (mesurés).
 
 ── Dettes documentaires ──
 
-1. `docs/utilisateur.md` N'EXISTE TOUJOURS PAS. **C'est l'objet de la S24**
-   et le dernier verrou du MVP.
-
-2. `06.Composants.md` n'a toujours PAS été relu depuis l'implémentation de M4
-   en diffusion assistée. Rien ne prouve qu'il y a une contradiction — rien ne
-   prouve l'inverse non plus. Point NON VÉRIFIÉ. Toute correction relève de
-   RM-03.
-
-3. `docs/technique/architecture.md` §2 décrit encore la dette d'alias tsconfig
-   de DT-Lot1-03 comme ouverte, alors que `tsconfig.json` mappe bien `@/*` →
-   `./src/*`. **La dette est réglée, sa clôture n'a jamais été tracée.**
-   Repéré en S22, toujours pas traité.
+1. `docs/technique/architecture.md` §2 décrit encore la dette d'alias
+   tsconfig de `DT-Lot1-03` comme ouverte, alors que `tsconfig.json` mappe
+   bien `@/*` → `./src/*`. **La dette est réglée, sa clôture n'a jamais été
+   tracée.** Repéré en S22, toujours pas traité — c'est désormais le plus
+   ancien point ouvert du dépôt.
 
 ── Angles morts techniques ──
 
-4. **La table `events` ne contient QUE des données de test.** Les 3 projets
-   réels sont antérieurs à la table et ne produiront jamais d'événement
-   rétroactivement. Conséquence : `/dashboard/mesures` sans `?tests=1` affiche
-   **0 partout**, et c'est correct. La cadence réelle démarrera au prochain
-   projet réel. **Ne pas prendre ce zéro pour une panne.**
+2. **L'isolation des données entre utilisateurs ne peut pas être mesurée** :
+   un seul compte existe (`DT-Lot1-01`), donc aucun projet d'un autre
+   utilisateur à tenter d'atteindre. Les policies RLS ont été **relues**,
+   pas éprouvées. Inscrit dans `tests.md` §5. **À refaire le jour où un
+   second compte existera.**
 
-5. Chaque exécution du test E2E ajoute **4 événements non supprimables** en
-   production (journal append-only, DT-Lot5-09). Ils sont écartés à la lecture
-   sur le préfixe `[E2E]`, jamais de la base. À surveiller si le volume devient
-   gênant — la seule sortie serait une purge manuelle en SQL Editor.
+3. **La table `events` ne contient QUE des données de test.** Les 3 projets
+   réels sont antérieurs. `/dashboard/mesures` sans `?tests=1` affiche 0
+   partout, et c'est correct. **Ne pas prendre ce zéro pour une panne.**
 
-6. Un projet de test est resté au statut `Idée` au lieu d'`Archivé` :
+4. Chaque exécution du test E2E ajoute **4 événements non supprimables** en
+   production (journal append-only). Écartés à la lecture sur le préfixe
+   `[E2E]`, jamais de la base.
+
+5. Un projet de test est resté au statut `Idée` au lieu d'`Archivé` :
    `[E2E] Chaîne critique 1788032168183`, vestige d'un run interrompu.
-   Sans conséquence (sa preuve est archivée), mais il traîne.
 
-7. `UpdateProofInput` (`m3-preuves/types.ts`) est déclaré mais importé nulle
-   part : une preuve publiée ne peut être ni corrigée ni renommée, seulement
-   archivée. Non bloquant, mais c'est un manque produit réel.
+6. Le refresh de session **après expiration réelle du jeton** n'est
+   toujours pas couvert. `session.spec.ts` prouve la survie à un
+   rechargement immédiat, pas au renouvellement effectif. Premier suspect
+   en cas de déconnexion inattendue.
 
-8. **Le PAT GitHub n'a pas encore été révoqué** sur github.com/settings/tokens.
-   Il est déjà rejeté par GitHub et le fichier `.bak` qui le contenait a été
-   supprimé, mais la révocation reste le geste propre. Premier geste de la S24.
+7. **`export const revalidate = 60` est du code mort** dans `/p` et
+   `/p/[slug]` : les pages sont dynamiques, la déclaration n'a aucun effet.
+   Elle a déjà induit une erreur en doc. **Soit la retirer, soit rendre les
+   pages réellement statiques** — mais ne pas la laisser mentir.
 
-9. La génération de posts n'a été éprouvée que sur DEUX preuves, dont une
-   factice issue du test E2E. Le prompt est isolé dans
-   `m4-diffusion/domain/build-post-prompt.ts`, modifiable sans toucher au reste.
+8. La génération de posts n'a été éprouvée que sur **deux** preuves, dont
+   une factice issue du test E2E.
 
-10. Le refresh de session Supabase par le proxy tourne depuis le Lot 5
-    seulement. Vérifié en anonyme, mais la navigation CONNECTÉE au long cours
-    n'a toujours pas été éprouvée. Premier suspect en cas de déconnexion ou de
-    cookie qui saute.
+── Hors périmètre de ce dépôt, mais réel ──
 
-═══════════════════════════════════════════════════════════════
-🧭 LEÇON DE LA S23, TRANSPOSABLE
-═══════════════════════════════════════════════════════════════
+9. **Le VPS `sterveshop` tirait du code avec une clé morte depuis le
+   11 juillet 2026.** Sa clé (`VPS-git-pull-sterveshop`) a été supprimée en
+   S24. Si ce VPS fait des `git pull` automatiques, ils échouent en silence
+   depuis des semaines. Autre projet, mais à traiter.
 
-Trois lots tagués, une CI verte à chaque push, et trois règles minimales de la
-stratégie de tests jamais appliquées. Personne ne l'a vu pendant quatre lots
-parce que la suite était verte — elle testait simplement autre chose.
-
-Un tag ne prouve que ce qu'on a pensé à vérifier. La S22 avait appris qu'un
-fichier correct ne prouve pas un comportement ; la S23 ajoute qu'une suite
-verte ne prouve pas une couverture. Dans les deux cas, le remède est le même :
-relire le critère écrit, et aller mesurer.
-
-Corollaire pratique adopté en S23 : après avoir écrit un test, **le casser
-volontairement** (muter le code testé) pour vérifier qu'il échoue. Un test qui
-ne peut pas échouer est un faux vert qui coûtera trois séances à découvrir.
+10. Le `TXT _vercel` de vérification pourrait être retiré maintenant que le
+    domaine est validé (Vercel l'indique). Sans urgence — et **ne jamais
+    toucher à celui de `dashboard`**, qui vit sous le même nom.
 
 ═══════════════════════════════════════════════════════════════
-FIN DU PROMPT DE REPRISE S24
+🧭 LEÇON DE LA S24, TRANSPOSABLE
+═══════════════════════════════════════════════════════════════
+
+Trois fois dans la même séance, un affichage a affirmé quelque chose que la
+réalité ne confirmait pas :
+
+- le code déclarait `revalidate = 60` — sans aucun effet ;
+- Vercel affichait « Valid Configuration » — avant toute vérification réelle ;
+- Supabase montrait la bonne valeur dans son champ — sans qu'elle soit
+  forcément enregistrée.
+
+Chaque fois, la même parade : **aller chercher la preuve ailleurs que là où
+l'affirmation est faite.** Le build plutôt que le fichier source. Un `curl`
+plutôt que le tableau de bord. Un rechargement de page plutôt que le
+formulaire rempli.
+
+La S22 avait appris qu'un fichier correct ne prouve pas un comportement ;
+la S23, qu'une suite verte ne prouve pas une couverture. La S24 ajoute :
+**un écran qui dit « c'est bon » n'est pas une mesure.**
+
+Corollaire conservé de la S23 : après avoir écrit un test, le casser
+volontairement pour vérifier qu'il échoue. Appliqué en S24 sur
+`session.spec.ts`, et ça a servi.
+
+═══════════════════════════════════════════════════════════════
+FIN DU PROMPT DE REPRISE S25
