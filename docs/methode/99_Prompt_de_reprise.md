@@ -106,7 +106,8 @@ injoignable depuis un autre appareil. Corrigé, et vérifié par rechargement.
 🎯 OBJECTIF S25 — PREMIER PROJET RÉEL DE BOUT EN BOUT DANS LE SYSTÈME
 ═══════════════════════════════════════════════════════════════
 
-Projet retenu : **`outil-trading-stephane`** (C:\Dev_Développement).
+Projet retenu : **`outil-trading-stephane`**, dans le dossier de
+développement local, voisin de ce dépôt.
 
 ── Pourquoi ce projet, et pas le MVP lui-même ──
 
