@@ -103,46 +103,89 @@ premier jour** — un lien de réinitialisation de mot de passe aurait été
 injoignable depuis un autre appareil. Corrigé, et vérifié par rechargement.
 
 ═══════════════════════════════════════════════════════════════
-🎯 OBJECTIF S25 — DÉCIDER DE L'APRÈS-MVP
+🎯 OBJECTIF S25 — PREMIER PROJET RÉEL DE BOUT EN BOUT DANS LE SYSTÈME
 ═══════════════════════════════════════════════════════════════
 
-**L'étape 3 de la S24 n'a pas été faite.** Le chantier du domaine a pris sa
-place — utilement, mais la question reste entière :
+Projet retenu : **`outil-trading-stephane`** (C:\Dev_Développement).
 
-> Le premier projet de démonstration de la méthode, c'est ce système.
-> Le MVP terminé est donc lui-même une preuve publiable.
-> **Est-ce la prochaine preuve à produire ?**
+── Pourquoi ce projet, et pas le MVP lui-même ──
 
-Ce n'est pas une question rhétorique. Le projet a deux objectifs (voir
-CLAUDE.md) : produire des preuves publiques, ET tenir un système où le temps
-de mise en preuve ne dépasse pas le temps du projet. Un MVP clos qui ne
-produit aucune preuve échoue au premier objectif.
+La question « le MVP terminé est-il la prochaine preuve à produire ? » a été
+tranchée en fin de S24 : **non, pas maintenant.**
 
-Matière disponible pour cette preuve, si elle est retenue :
-- 6 lots livrés, 51 conditions de sortie dont 50 mesurées ;
-- 127 tests unitaires, 10 E2E, CI verte ;
-- 11 décisions d'architecture tracées sur le seul Lot 5 ;
-- et surtout **la manière** : trois défauts trouvés en mesurant, que
-  personne n'aurait vus en relisant le code.
+Raison structurelle : une preuve remonte par `public_proofs → deliverables →
+method_steps` jusqu'à un projet (`DT-Lot5-09`). Publier le MVP obligerait
+donc à créer un projet « Méthode Architecte IA » et à cocher ses 13 étapes
+en une soirée, pour un travail étalé sur des mois. Le journal `events`
+enregistre **le moment du clic**, pas celui du travail : la toute première
+cadence mesurée serait fausse, et fabriquée par nous.
 
-⚠️ Rappel : `/dashboard/mesures` affichera **0 partout** pour ce projet.
-La table `events` est postérieure aux 3 projets réels. Ce n'est pas une
-panne (angle mort n°3).
+Un projet extérieur échappe à ce piège : le code existe déjà, mais **le
+travail de méthode reste entièrement à faire**. Il est produit maintenant,
+donc la cadence est vraie.
+
+⚠️ À corriger si l'idée revient : il est FAUX de dire que la méthode n'a été
+appliquée qu'à ce dépôt. `crm-prospection-ingrid` porte les 13 fichiers
+complets, et c'est la preuve déjà en ligne sur `/p`. `createur-contenu-ia`
+a une doc structurée, mais sous une trame antérieure — la repasser aux 13
+étapes serait de la traduction, pas de la méthode.
+
+── Pourquoi Stéphane en premier ──
+
+- **Le problème métier est déjà chiffré** : win rate 57 %, et pourtant une
+  perte nette sur une période documentée. L'étape 2 exige un problème
+  mesurable ; ici il existe, et il est parlant — le problème n'était pas la
+  stratégie, c'était la discipline. Sur tous les autres candidats, ce
+  chiffrage reste à produire.
+- **Client réel et payant** (1er client consulting).
+- **Périmètre petit** (1 commit livré) : la preuve publiée est atteignable
+  dans la séance. C'est décisif, car l'objectif est d'exercer la chaîne
+  ENTIÈRE pour en trouver les failles — s'enliser à l'étape 3 d'un gros
+  système ne les révélerait pas.
+
+Prévu ensuite, une fois les frictions corrigées : **`lab-farm-app`**
+(satellite NDVI, alertes WhatsApp, IA agronomique, en production sur
+`ferme.sterveshop.cloud`). Ce sera la preuve vitrine, faite sur un système
+assaini. Ne pas l'attaquer avant.
+
+🔒 **CONTRAINTE FERME** — le dépôt d'origine contient le prénom du client et
+un **numéro de compte de courtier**. Rien de tout cela ne sort sur `/p`.
+La preuve parlera d'« un trader indépendant », sans identifiant.
+
+── Le vrai livrable de la séance ──
+
+Ce n'est pas la preuve. C'est **le relevé des frictions** rencontrées en
+utilisant le système pour de vrai. Noter tout ce qui accroche, au fil de
+l'eau, sans trier sur le moment. Ce relevé deviendra le plan de travail
+post-MVP — écrit par l'usage, pas par anticipation.
+
+Deux frictions sont déjà attendues (paris à confirmer ou infirmer) :
+
+1. **Une preuve publiée ne se corrige pas** — ni titre, ni résumé
+   (`UpdateProofInput` déclaré, importé nulle part). Il faudra la retirer et
+   la refaire. → **Relire avant de cliquer « Publier la preuve 🚀 ».**
+2. **Une étape « Terminée » est définitive.** Aucun retour possible. Ne pas
+   terminer une étape « pour voir ».
 
 ═══════════════════════════════════════════════════════════════
-📋 PLAN DE TRAVAIL S25 (proposition, à valider en début de séance)
+📋 PLAN DE TRAVAIL S25 (à valider en début de séance)
 ═══════════════════════════════════════════════════════════════
 
-Étape 0 — Niveau d'énergie & calibrage. Vérifier que la prod répond
-          toujours sur le nouveau domaine.
+Étape 0 — Niveau d'énergie & calibrage. Vérifier que la prod répond sur
+          `https://methode.sterveshop.cloud`.
 
-Étape 1 — Trancher l'objectif : le MVP devient-il une preuve publique ?
-          Si oui → créer le projet, le suivre, produire la preuve. C'est le
-          premier passage complet de la chaîne sur un projet réel **depuis**
-          la mise en place de `events` : ce sera aussi la première cadence
-          réelle mesurée.
+Étape 1 — Créer le projet dans le système, puis dérouler les 13 étapes en
+          produisant réellement la documentation de méthode d'
+          `outil-trading-stephane`. Ne cocher une étape que lorsque son
+          livrable existe.
 
-Étape 2 — Selon la réponse, l'un des chantiers de la liste ci-dessous.
+Étape 2 — Attacher les livrables, publier, transformer en preuve publique,
+          générer le post de diffusion. Aller jusqu'au bout de la chaîne.
+
+Étape 3 — Trier le relevé de frictions et en faire le plan post-MVP.
+
+⚠️ **Un seul projet.** Ne pas en ouvrir un second avant que le premier
+n'ait produit sa preuve publique et que ses frictions ne soient corrigées.
 
 ═══════════════════════════════════════════════════════════════
 💡 PISTES OUVERTES, NON PRIORITAIRES
