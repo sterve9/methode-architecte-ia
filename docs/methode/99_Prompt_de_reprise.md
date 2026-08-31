@@ -103,90 +103,103 @@ premier jour** — un lien de réinitialisation de mot de passe aurait été
 injoignable depuis un autre appareil. Corrigé, et vérifié par rechargement.
 
 ═══════════════════════════════════════════════════════════════
-🎯 OBJECTIF S25 — PREMIER PROJET RÉEL DE BOUT EN BOUT DANS LE SYSTÈME
+🎯 OBJECTIF S25 — PREMIER PROJET NEUF, LES 13 ÉTAPES EN DIRECT
 ═══════════════════════════════════════════════════════════════
 
-Projet retenu : **`outil-trading-stephane`**, dans le dossier de
-développement local, voisin de ce dépôt.
+Projet : **diffusion multi-canal d'une preuve**. Nouveau dépôt à créer,
+proposition de nom `studio-diffusion`, voisin de ce dépôt.
 
-── Pourquoi ce projet, et pas le MVP lui-même ──
+── Le plan a changé en fin de S24, et pourquoi ──
 
-La question « le MVP terminé est-il la prochaine preuve à produire ? » a été
-tranchée en fin de S24 : **non, pas maintenant.**
+`outil-trading-stephane` était retenu. Abandonné au profit d'un projet NEUF,
+sur demande explicite : dérouler les 13 étapes **dans le bon ordre, en
+direct**, plutôt que de les reconstituer sur un projet déjà construit.
+C'est le test honnête de la méthode, pas seulement du système.
 
-Raison structurelle : une preuve remonte par `public_proofs → deliverables →
-method_steps` jusqu'à un projet (`DT-Lot5-09`). Publier le MVP obligerait
-donc à créer un projet « Méthode Architecte IA » et à cocher ses 13 étapes
-en une soirée, pour un travail étalé sur des mois. Le journal `events`
-enregistre **le moment du clic**, pas celui du travail : la toute première
-cadence mesurée serait fausse, et fabriquée par nous.
+Le MVP lui-même reste écarté comme sujet, pour la raison structurelle
+inchangée : cocher 13 étapes en une soirée fabriquerait une fausse cadence.
 
-Un projet extérieur échappe à ce piège : le code existe déjà, mais **le
-travail de méthode reste entièrement à faire**. Il est produit maintenant,
-donc la cadence est vraie.
+── Le problème métier, DÉJÀ MESURÉ ──
 
-⚠️ À corriger si l'idée revient : il est FAUX de dire que la méthode n'a été
-appliquée qu'à ce dépôt. `crm-prospection-ingrid` porte les 13 fichiers
-complets, et c'est la preuve déjà en ligne sur `/p`. `createur-contenu-ia`
-a une doc structurée, mais sous une trame antérieure — la repasser aux 13
-étapes serait de la traduction, pas de la méthode.
+Relevé sur la vidéo TikTok la plus performante, le 31/08/2026 :
 
-── Pourquoi Stéphane en premier ──
+| Mesure | Valeur |
+|---|---|
+| Vues | 425 |
+| Temps de visionnage moyen | 34,5 s |
+| Part moyenne de la vidéo regardée | **21 %** |
+| Vidéo vue en entier | 8,32 % |
+| Décrochage massif | **à 0:02** |
+| Nouveaux abonnés | 5, soit **~1,18 %** |
+| Total compte | 16 vidéos → 30 abonnés |
 
-- **Le problème métier est déjà chiffré** : win rate 57 %, et pourtant une
-  perte nette sur une période documentée. L'étape 2 exige un problème
-  mesurable ; ici il existe, et il est parlant — le problème n'était pas la
-  stratégie, c'était la discipline. Sur tous les autres candidats, ce
-  chiffrage reste à produire.
-- **Client réel et payant** (1er client consulting).
-- **Périmètre petit** (1 commit livré) : la preuve publiée est atteignable
-  dans la séance. C'est décisif, car l'objectif est d'exercer la chaîne
-  ENTIÈRE pour en trouver les failles — s'enliser à l'étape 3 d'un gros
-  système ne les révélerait pas.
+Durée de la vidéo **déduite** (34,5 / 0,21) : **~2 min 45**. ⚠️ Non confirmé
+par lecture directe — à vérifier en début de séance.
 
-Prévu ensuite, une fois les frictions corrigées : **`lab-farm-app`**
-(satellite NDVI, alertes WhatsApp, IA agronomique, en production sur
-`ferme.sterveshop.cloud`). Ce sera la preuve vitrine, faite sur un système
-assaini. Ne pas l'attaquer avant.
+**Deux causes identifiées, une seule visible :**
 
-🔒 **CONTRAINTE FERME** — le dépôt d'origine contient le prénom du client et
-un **numéro de compte de courtier**. Rien de tout cela ne sort sur `/p`.
-La preuve parlera d'« un trader indépendant », sans identifiant.
+1. **Le hook.** Le public part à 2 secondes, avant tout contenu. TikTok lit
+   cet abandon comme un verdict et cesse de distribuer.
+2. **La durée, invisible.** À contenu identique, 34,5 s regardées font 21 %
+   sur 2 min 45, mais **77 % sur 45 s**. Le format transforme une attention
+   correcte en mauvais bulletin.
 
-── Le vrai livrable de la séance ──
+**Ce qui n'est PAS le problème : la conversion.** ~1 % d'abonnement, c'est
+sain. Ceux qui regardent suivent. Trop peu de gens regardent.
 
-Ce n'est pas la preuve. C'est **le relevé des frictions** rencontrées en
-utilisant le système pour de vrai. Noter tout ce qui accroche, au fil de
-l'eau, sans trier sur le moment. Ce relevé deviendra le plan de travail
-post-MVP — écrit par l'usage, pas par anticipation.
+Arithmétique de l'objectif : à ~1 %, 1000 abonnés ≈ **100 000 vues
+cumulées**. À 425 vues/vidéo → plus de 200 vidéos. À 5 000 → une vingtaine.
+**Le levier est la portée par vidéo, pas le nombre de vidéos.**
 
-Deux frictions sont déjà attendues (paris à confirmer ou infirmer) :
+── Le trou dans le système, qui justifie le projet ──
 
-1. **Une preuve publiée ne se corrige pas** — ni titre, ni résumé
-   (`UpdateProofInput` déclaré, importé nulle part). Il faudra la retirer et
-   la refaire. → **Relire avant de cliquer « Publier la preuve 🚀 ».**
-2. **Une étape « Terminée » est définitive.** Aucun retour possible. Ne pas
-   terminer une étape « pour voir ».
+M4 Diffusion ne sait produire que du **texte, pour LinkedIn et X**. Or le
+canal réel est la **vidéo** : une série TikTok qui raconte la construction
+de `crm-prospection-ingrid`, étape par étape (au 31/08 : l'objet central).
+
+Répartition naturelle des canaux, à valider :
+
+- **YouTube** — l'explication complète. C'EST la preuve. Chaîne créée, VIDE.
+- **TikTok** — 45 s, un angle, renvoi vers la version longue.
+- **LinkedIn** — le texte + les liens. Publication irrégulière aujourd'hui.
+
+Objectifs déclarés : court terme, vendre un produit digital (boutique
+Chariow) ; moyen terme, accumuler des preuves → petites missions →
+consolider la compétence → poste d'AI automation specialist.
+⚠️ Tension assumée : l'audience du produit et celle des missions ne sont pas
+la même. La crédibilité précède la vente.
 
 ═══════════════════════════════════════════════════════════════
 📋 PLAN DE TRAVAIL S25 (à valider en début de séance)
 ═══════════════════════════════════════════════════════════════
 
-Étape 0 — Niveau d'énergie & calibrage. Vérifier que la prod répond sur
-          `https://methode.sterveshop.cloud`.
+Étape 0 — Niveau d'énergie & calibrage. Confirmer la durée réelle de la
+          vidéo analysée (déduction non vérifiée). Créer le dépôt.
 
-Étape 1 — Créer le projet dans le système, puis dérouler les 13 étapes en
-          produisant réellement la documentation de méthode d'
-          `outil-trading-stephane`. Ne cocher une étape que lorsque son
-          livrable existe.
+Étape 1 — Dérouler les étapes 1 à 4 de la méthode : Besoin Client,
+          Problème Métier, Objets Métier, Objet Central. En direct, dans
+          l'ordre, sans anticiper la solution.
 
-Étape 2 — Attacher les livrables, publier, transformer en preuve publique,
-          générer le post de diffusion. Aller jusqu'au bout de la chaîne.
+Étape 2 — Créer le projet dans le système sur
+          https://methode.sterveshop.cloud, attacher les livrables produits,
+          terminer les étapes AU FUR ET À MESURE — jamais en rafale.
 
-Étape 3 — Trier le relevé de frictions et en faire le plan post-MVP.
+Étape 3 — Relever les frictions du système au fil de l'eau.
 
-⚠️ **Un seul projet.** Ne pas en ouvrir un second avant que le premier
-n'ait produit sa preuve publique et que ses frictions ne soient corrigées.
+⚠️ **Ne pas décider l'architecture avant l'étape 8.** La question « le code
+atterrit-il dans M4, ou dans une application séparée qui consomme les
+preuves par contrat ? » est prématurée et doit le rester.
+
+── En parallèle, hors séance : la correction gratuite ──
+
+Sur les 5 prochaines vidéos : **45 secondes, hook réécrit, version longue
+sur YouTube.** Ce n'est pas une distraction — c'est ce qui alimentera
+l'étape 2 en données fraîches. Si la rétention passe de 21 % à 60 %, la
+cause est prouvée au lieu d'être supposée.
+
+Où trouver les chiffres : profil → menu ☰ → Outils de créateur →
+**TikTok Studio** → onglet **Contenu** (courbe de rétention seconde par
+seconde). Pas dans « Paramètres et confidentialité ».
 
 ═══════════════════════════════════════════════════════════════
 💡 PISTES OUVERTES, NON PRIORITAIRES
