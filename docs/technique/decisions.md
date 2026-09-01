@@ -838,3 +838,72 @@ Si à ce moment la valeur reste floue pour l'utilisateur, la priorité devra bas
   La deuxième ligne valide `DT-Lot4-03` sur le terrain : parce que la base ne stocke que le `slug` et jamais d'URL absolue, un lien partagé avant la migration reste valide après, sans aucune écriture en base.
 
   La troisième confirme que `VERCEL_PROJECT_PRODUCTION_URL` renvoie bien le **domaine personnalisé** et non le sous-domaine `.vercel.app` — point qui n'était pas acquis avant d'être mesuré, et dont dépendait le choix d'implémentation de `resolveSiteUrl()`.
+
+---
+
+### DT-S25-01 — Les projets de test sont écartés de la liste à la lecture, jamais supprimés
+
+*Premier travail post-MVP. Le préfixe passe de `DT-Lot5-…` à `DT-S25-…` : le
+lot 5 est clos avec le tag `v1.0.0-mvp`, continuer sa numérotation laisserait
+croire que cette décision en fait partie.*
+
+- **Contexte :** à l'ouverture de `/dashboard/projects` pour créer un projet
+  réel, la liste contenait **21 projets `[E2E] Chaîne critique …`** contre 4
+  projets réels ou semi-réels. Le premier vrai projet était invisible sans
+  faire défiler tout l'écran.
+
+  Mesuré : `listProjects()` faisait un `.select('*')` **sans aucun filtre**,
+  trié `created_at DESC` — les projets de test, plus récents, sortaient en
+  tête. Et **aucune suppression de projet n'existe** dans M1 (`create`,
+  `update`, `archive`, rien d'autre).
+
+  Confirme au passage un angle mort de la S24 : `[E2E] Chaîne critique
+  1788032168183` est bien resté au statut `Idée` au lieu d'`Archivé`.
+
+- **Décision :** appliquer à `listProjects` le traitement que M5 applique déjà
+  aux événements — **écarter à la lecture, jamais de la base**. Paramètre
+  `includeTests` (défaut `false`), et bascule `?tests=1` sur la page, calquée
+  sur `/dashboard/mesures`.
+
+  Le préfixe reste une **source de vérité unique** : `E2E_PROJECT_PREFIX` est
+  importé de `m5-mesures/domain/event-rules.ts`. M1 définit son propre
+  `isTestProject`, plutôt que d'appeler `isTestEvent` dont le nom parlerait
+  d'événements et rendrait le code trompeur.
+
+  `CA-06` est respecté : une constante de domaine n'est pas un accès aux
+  données d'un autre module, et le précédent existe déjà — M1 importe
+  `recordEvent` de M5.
+
+- **Alternatives écartées :**
+  - *Supprimer les projets de test en base* — écarté. **Le test E2E écrit en
+    production (DT-Lot5-02) et en recrée à chaque exécution** : le nettoyage
+    ne tiendrait pas une semaine. S'y ajoute le journal `events`, append-only,
+    qui référence ces projets.
+  - *Filtrer en SQL (`not.like`)* — écarté au profit d'un filtre en mémoire,
+    pour conserver une seule expression de la règle, partagée avec M5.
+  - *Replier les projets archivés dans l'affichage* — écarté : traite le
+    symptôme visuel, pas la cause.
+
+- **Ce qui n'est PAS décidé ici :** la cause racine, c'est-à-dire **le fait
+  que le test E2E écrive dans la base de production**. Deux pistes restent
+  ouvertes — une base de test séparée (qui rendrait aussi mesurable
+  l'isolation RLS entre utilisateurs, relue mais jamais éprouvée faute d'un
+  second compte), ou un nettoyage en fin de run (qui se heurte au journal
+  append-only). Décision d'architecture de test, trop lourde pour être prise
+  en passant.
+
+- **Conséquences :**
+  - `docs/utilisateur.md` §3 documente le comportement (**RM-01**, appliquée
+    dans le même lot).
+  - Le comportement est désormais cohérent entre `/dashboard/projects` et
+    `/dashboard/mesures` : ce qui fausse la lecture est écarté de la vue,
+    jamais de la base.
+
+- **Vérification :** `npm run build` — succès, 11 routes générées,
+  `/dashboard/projects` reste `ƒ (Dynamic)`, ce qui est attendu puisqu'elle
+  lit `cookies()` et `searchParams`.
+
+  ⚠️ **Non vérifié à l'écran au moment du commit.** Le filtre est prouvé par
+  le build et la lecture du code, pas par un affichage. À confirmer sur
+  `/dashboard/projects` : les 21 lignes `[E2E]` disparaissent, `?tests=1` les
+  ramène.

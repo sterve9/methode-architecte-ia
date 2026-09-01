@@ -8,13 +8,23 @@ import { listProjects } from '@/modules/m1-projets/queries/list-projects';
  * Page liste des projets de l'utilisateur connecté.
  *
  * Route : /dashboard/projects
+ * Route : /dashboard/projects?tests=1 pour inclure les projets « [E2E] … »
  *
  * Chaque projet est cliquable et mène à sa page détail.
  *
+ * Les projets de test sont écartés par défaut, comme sur /dashboard/mesures :
+ * ils sont masqués à la lecture, jamais supprimés.
+ *
  * Protégée par vérification de session (auth.getUser()) en défense en
  * profondeur, en plus de l'allowlist du proxy (DT-Lot5-07).
+ *
+ * Next.js 16 : searchParams est une Promise (breaking change).
  */
-export default async function ProjectsPage() {
+export default async function ProjectsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   // 1. Vérification de session
   const supabase = await createClient();
   const {
@@ -25,7 +35,10 @@ export default async function ProjectsPage() {
     redirect('/login');
   }
 
-  const projects = await listProjects();
+  const params = await searchParams;
+  const includeTestProjects = params.tests === '1';
+
+  const projects = await listProjects(includeTestProjects);
 
   return (
     <main style={{ padding: '2rem', maxWidth: '720px', margin: '0 auto' }}>
@@ -105,6 +118,35 @@ export default async function ProjectsPage() {
           ))}
         </ul>
       )}
+
+      <footer
+        style={{
+          marginTop: '2rem',
+          paddingTop: '1rem',
+          borderTop: '1px solid #eee',
+          fontSize: '0.8rem',
+          color: '#666',
+        }}
+      >
+        {includeTestProjects ? (
+          <p style={{ margin: 0 }}>
+            Les projets de test («&nbsp;[E2E]&nbsp;…&nbsp;») sont{' '}
+            <strong>inclus</strong>.{' '}
+            <Link href="/dashboard/projects" style={{ color: '#0070f3' }}>
+              Revenir aux projets réels
+            </Link>
+          </p>
+        ) : (
+          <p style={{ margin: 0 }}>
+            Les projets de test («&nbsp;[E2E]&nbsp;…&nbsp;») sont écartés de
+            cette vue. Ils restent en base : le test E2E en recrée à chaque
+            exécution, les masquer tient dans le temps, les effacer non.{' '}
+            <Link href="/dashboard/projects?tests=1" style={{ color: '#0070f3' }}>
+              Les afficher quand même
+            </Link>
+          </p>
+        )}
+      </footer>
     </main>
   );
 }

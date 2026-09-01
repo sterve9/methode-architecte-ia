@@ -88,6 +88,23 @@ Tu es renvoyé sur la liste des projets. Le nouveau projet y figure au statut
 Prends le temps sur le champ *Problème métier* : c'est lui qui te rappellera,
 dans six mois, pourquoi ce projet existait.
 
+### Ce que la liste affiche
+
+Les projets sont triés du plus récent au plus ancien : celui que tu viens de
+créer est toujours en haut.
+
+**Les projets de test sont écartés.** Les projets nommés `[E2E] …` sont créés
+par les tests automatiques, qui écrivent dans la base réelle et en produisent
+un nouveau à chaque exécution. Ils n'apparaissent pas dans la liste. Le lien
+*Les afficher quand même*, en bas de page, les réintègre à la lecture.
+
+Ils ne sont pas supprimés pour autant — le système ne supprime rien (voir
+§11). Les masquer tient dans le temps ; les effacer ne tiendrait pas, la
+prochaine exécution des tests en recréerait aussitôt.
+
+C'est le même principe que sur le journal des mesures (§10) : ce qui fausse la
+lecture est écarté de la vue, jamais de la base.
+
 ---
 
 ## 4. Suivre les étapes de la méthode
