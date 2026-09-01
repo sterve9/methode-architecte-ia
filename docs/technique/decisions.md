@@ -903,7 +903,22 @@ croire que cette décision en fait partie.*
   `/dashboard/projects` reste `ƒ (Dynamic)`, ce qui est attendu puisqu'elle
   lit `cookies()` et `searchParams`.
 
-  ⚠️ **Non vérifié à l'écran au moment du commit.** Le filtre est prouvé par
-  le build et la lecture du code, pas par un affichage. À confirmer sur
-  `/dashboard/projects` : les 21 lignes `[E2E]` disparaissent, `?tests=1` les
-  ramène.
+  **Vérifié à l'écran en production le 01/09/2026**, sur
+  `https://methode.sterveshop.cloud/dashboard/projects`, après déploiement du
+  commit `16602ee` : la liste n'affiche plus les 21 projets `[E2E] Chaîne
+  critique …`. Confirmé par l'auteur, connecté à son compte.
+
+  Le comportement du lien *Les afficher quand même* (`?tests=1`) **n'a pas été
+  consigné séparément** — il est couvert par le build et la lecture du code,
+  pas par une observation rapportée. À noter tel quel plutôt que de l'inclure
+  dans une confirmation qui ne le mentionnait pas.
+
+  **Tentative de vérification locale, échouée pour une cause étrangère.**
+  Le serveur `next dev` est passé de « répond en 150 ms » à « ne répond plus
+  du tout, route publique comprise », en consommant un cœur en continu, avec
+  `AuthApiError: Invalid Refresh Token` dans son journal. C'est l'angle mort
+  n°6 de la S24 (refresh de session après expiration réelle du jeton) qui se
+  manifeste, et son symptôme réel est plus grave qu'une déconnexion : un déni
+  de service complet. **Observé en `next dev` uniquement, non reproduit en
+  production.** Sans lien avec la présente décision, mais c'est ce qui a
+  imposé de vérifier en production plutôt qu'en local.
