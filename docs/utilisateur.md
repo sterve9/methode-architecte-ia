@@ -38,8 +38,9 @@ La chaîne de valeur va toujours dans ce sens, et jamais dans l'autre :
   automatiquement à la naissance du projet — tu n'as jamais à les saisir.
 - Un **Livrable** est une URL vers quelque chose de réel (un repo, un Figma,
   un document), rattachée à une étape.
-- Une **Preuve publique** est un livrable raconté pour un lecteur extérieur, et
-  publié sur la vitrine.
+- Une **Preuve publique** est une **étude de cas** tirée d'un livrable :
+  pour qui, quel problème, quoi construit, quel résultat. Elle est écrite pour
+  un prospect, jamais pour raconter la méthode, et publiée sur la vitrine.
 - Un **post de diffusion** est un brouillon de publication tiré d'une preuve.
 
 Chaque maillon suppose le précédent : on ne publie pas une preuve sans livrable
@@ -206,41 +207,63 @@ espace** — publier un livrable ne le rend pas public.
 
 C'est réversible dans les deux sens, autant de fois que nécessaire.
 
-**À quoi ça sert** : seul un livrable *Publié* peut devenir une preuve publique.
-Le bouton **🌟 Preuve publique** n'apparaît que sur les livrables publiés. Le
+**À quoi ça sert** : seul un livrable *Publié* peut devenir une étude de cas.
+Le bouton **🌟 Étude de cas** n'apparaît que sur les livrables publiés. Le
 passage par *Publié* est la déclaration que ce livrable est présentable.
 
 ---
 
-## 7. Transformer un livrable en preuve publique
+## 7. Transformer un livrable en étude de cas
 
-C'est le geste qui expose quelque chose au monde entier. Lis le résumé deux fois
-avant de valider.
+Une preuve publique est une **étude de cas** : elle raconte le problème d'un
+client et ce qu'il a obtenu. Elle ne raconte jamais la méthode ni les étapes
+internes — ce n'est pas ce qu'un prospect vient chercher.
 
-1. Sur un livrable au statut **Publié**, clique **🌟 Preuve publique**.
-2. La fenêtre **🌟 Transformer en Preuve Publique** s'ouvre :
-   - **Titre du Récit** — pré-rempli avec le titre du livrable, modifiable.
-     C'est lui qui devient l'adresse publique de la preuve, donc écris-le pour
-     un lecteur extérieur.
-   - **Format de preuve** — au choix : *Récit de compétence*, *Cas d'usage*,
-     *Livrable technique*, *Démonstrateur AI*.
-   - **Résumé / Valeur apportée** — **obligatoire**. Pré-rempli avec la
-     description du livrable si tu en avais mis une. C'est le texte qu'un
-     visiteur lit en premier, et celui qui sert de matière au post de diffusion.
-   - **Contexte & Méthodologie** — optionnel.
-   - **Image de preuve** — optionnel, une URL d'image. Elle illustre la fiche
-     et l'aperçu affiché lors d'un partage sur les réseaux.
-3. Clique **Publier la preuve 🚀**.
+La création et la mise en ligne sont maintenant **deux gestes séparés**.
 
-La preuve est créée **et mise en ligne dans le même geste** : il n'y a pas
-d'étape de relecture intermédiaire. Un lien **Voir /p/…** apparaît aussitôt —
-c'est l'adresse publique définitive de cette preuve.
+### 7.1 Créer le brouillon
 
-La preuve est alors visible par n'importe qui, sans compte, sur `/p` et sur sa
-fiche `/p/<slug>`, avec ses boutons de partage LinkedIn et X.
+1. Sur un livrable au statut **Publié**, clique **🌟 Étude de cas**.
+2. Un brouillon est créé immédiatement, et l'écran d'édition s'ouvre. Rien
+   n'est public à ce stade.
+
+### 7.2 Rédiger le cas
+
+L'écran `/dashboard/proofs/<id>` propose huit champs :
+
+- **Titre du cas** — pré-rempli avec le titre du livrable. Écris-le du point de
+  vue du client : ce qu'il a obtenu, pas le nom du livrable.
+- **Métier / cible** — **obligatoire pour publier**. Pour qui. Un visiteur doit
+  s'y reconnaître (ex. *Gestion de réseaux sociaux*).
+- **Le problème** — **obligatoire pour publier**. Dans les mots du client.
+- **Ce que j'ai construit** — **obligatoire pour publier**. Le système, en
+  clair. Pas les étapes de la méthode.
+- **Le résultat** — **obligatoire pour publier**. La transformation obtenue,
+  avec un chiffre si tu en as un.
+- **Accroche courte** — affichée sur les cartes de la vitrine et dans les
+  aperçus de partage.
+- **Vidéo de démonstration** — optionnel. **YouTube uniquement** : toute autre
+  URL est ignorée à l'affichage, silencieusement et volontairement.
+- **Image de preuve** — optionnel, une URL d'image.
+
+**Enregistrer** sauvegarde sans rien publier. Tu peux revenir autant de fois
+que nécessaire.
+
+### 7.3 Publier
+
+Clique **Publier**. Le bouton enregistre d'abord, puis met en ligne.
+
+**Si les quatre champs obligatoires ne sont pas tous remplis, la publication
+est refusée**, avec le message « Étude de cas incomplète : … » nommant ce qui
+manque. Un bandeau le rappelle d'ailleurs en haut de l'écran tant que le cas
+est incomplet. Ce n'est pas un bug : la vitrine ne doit jamais afficher un cas
+à trous. Un brouillon incomplet, lui, reste parfaitement autorisé.
+
+Une fois publiée, l'étude de cas est visible par n'importe qui, sans compte,
+sur `/p` et sur sa fiche `/p/<slug>`.
 
 **La mise en ligne est immédiate.** Les pages publiques sont recalculées à
-chaque visite : ta preuve est consultable dès que tu as cliqué, sans délai de
+chaque visite : ton cas est consultable dès que tu as cliqué, sans délai de
 cache. Si elle n'apparaît pas, cherche la cause ailleurs — pas dans un délai
 d'attente.
 
@@ -342,7 +365,8 @@ Autant le savoir avant de le chercher :
 |---|---|
 | Tu retombes sur `/login` | Session expirée. Reconnecte-toi, rien n'est perdu. |
 | Le bouton **Terminer** est absent | L'étape est encore *À faire* : clique **Démarrer** d'abord. Ou elle est déjà *Terminée*, et c'est un état sans retour. |
-| Le bouton **🌟 Preuve publique** est absent | Le livrable est en *Brouillon* : clique **Publier** d'abord. |
+| Le bouton **🌟 Étude de cas** est absent | Le livrable est en *Brouillon* : clique **Publier** d'abord. |
+| La publication est refusée : « Étude de cas incomplète » | Métier, problème, solution ou résultat n'est pas rempli. Le message nomme ce qui manque. |
 | Le bouton **Archiver** est absent | Le projet est en *Idée* ou *Cadré*. Fais-le avancer jusqu'à *En cours*. |
 | La liste des statuts ne propose pas celui que tu veux | Ce passage n'est pas autorisé depuis le statut actuel — voir le schéma en §4. |
 | Une preuve publiée n'apparaît pas sur `/p` | Il n'y a pas de délai de cache : l'affichage est immédiat. Vérifie plutôt que la preuve n'a pas été retirée de la vitrine. |

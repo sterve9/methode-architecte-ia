@@ -1025,3 +1025,102 @@ croire que cette décision en fait partie.*
     `docs/technique/base_de_donnees.md` sous **RM-02**.
   - Suite unitaire : 127 → 152 tests, verte. Lint vert.
 
+---
+
+### DT-S25-03 — La surface publique est reconstruite en études de cas ; la saisie précède la publication
+
+*Suite directe de `DT-S25-02`, qui n'avait traité que le modèle de données.
+Le découpage était volontaire ; voici la seconde moitié.*
+
+- **Contexte :** après `DT-S25-02`, la base savait porter une étude de cas mais
+  **rien ne permettait d'en saisir une**. Le bouton « 🌟 Preuve publique »
+  créait une preuve puis la publiait dans la foulée : depuis le verrou de
+  complétude, ce geste échouait systématiquement, et aucun écran n'existait
+  pour remplir les quatre champs exigés. La vitrine, elle, parlait encore de
+  « Récits de Compétences », de « Méthode Architecte IA » et affichait un badge
+  « Livrable vérifié et certifié ».
+
+- **Décision — la création et la publication deviennent deux gestes.** Le
+  bouton crée un **brouillon** et ouvre `/dashboard/proofs/[id]`, écran
+  d'édition des huit champs. « Enregistrer » appelle `updateProof` ;
+  « Publier » enregistre puis appelle `updateProofStatus`, et **affiche le
+  motif de refus renvoyé** plutôt que d'échouer en silence. Un bandeau nomme en
+  permanence les champs manquants, calculé côté serveur par
+  `getMissingCaseStudyFields` — la même fonction que le verrou, pour que le
+  rappel et le refus ne puissent jamais diverger.
+
+  Nouvelle query `getProofById` : `getProofBySlug` filtre sur
+  `status = 'publié'`, donc un brouillon y est invisible. Sans lecture tous
+  statuts, une preuve n'aurait jamais pu être relue avant publication.
+
+- **Décision — la couche publique ne dit plus rien de la méthode.** `/p`
+  devient une page d'offre orientée client (hero, confiance, cas, services, à
+  propos, contact) et `/p/[slug]` suit l'ordre du client : le problème, ce que
+  j'ai construit, le résultat, la preuve. `format` et `context` ne sont plus
+  lus. Le bloc « Contexte & Méthodologie » et le badge « Livrable vérifié et
+  certifié » sont retirés — le second était une auto-attribution que rien ne
+  garantissait.
+
+  Le `title.template` du layout racine suffixait **toutes** les pages de
+  « — Méthode Architecte IA », y compris les onglets et les aperçus de partage
+  des études de cas. Les deux pages publiques passent donc en `title.absolute`.
+  Le template reste en vigueur côté dashboard. Au passage, `<html lang>`
+  passe de `en` à `fr` : tout le site est en français, et c'était un défaut
+  réel de référencement et d'accessibilité.
+
+- **Décision — `video_url` n'est jamais recopiée dans l'iframe.** Le module
+  `domain/youtube-embed.ts` **extrait** un identifiant de 11 caractères et
+  **reconstruit** une URL dont l'origine est écrite en dur. Une chaîne saisie à
+  la main qui finit dans un attribut `src` est une porte d'entrée ; valider
+  « ça ressemble à YouTube » n'en est pas une fermeture. Tout ce qui n'est pas
+  reconnu — autre hôte, `javascript:`, hôte trompeur du type
+  `youtube.com.attaquant.net` — renvoie `null`, et aucun lecteur n'est rendu.
+
+- **Décision — aucun emplacement de témoignage n'est rendu.** Aucune colonne
+  ne porte de témoignage. Un cadre vide ou un témoignage d'illustration sur une
+  page qui prétend prouver vaut moins que rien. L'emplacement apparaîtra avec
+  la donnée, via une migration dédiée.
+
+- **Alternatives écartées :**
+  - *Garder création et publication en un seul geste, en rendant les quatre
+    champs obligatoires dans la fenêtre de création* — écarté : on ne rédige
+    pas une étude de cas dans une modale, et un brouillon incomplet est un
+    état de travail légitime.
+  - *Recalculer le message de blocage côté client pour désactiver le bouton* —
+    écarté : deux expressions de la même règle finissent par diverger. Le
+    bouton reste actif et c'est le serveur qui tranche.
+  - *Retirer `format` du formulaire en le laissant vide* — écarté : la colonne
+    est `NOT NULL` et `CT-03` la consomme. `createProof` écrit désormais la
+    valeur neutre « Étude de cas ».
+  - *Assainir `video_url` avec une expression régulière sur l'URL entière* —
+    écarté : on garderait la chaîne de l'utilisateur. Extraire puis
+    reconstruire ne garde que 11 caractères validés.
+
+- **Ce qui n'est PAS décidé ici :**
+  - Les liens de contact (**M'écrire**, **LinkedIn**, **Nexlance**) et les
+    chaînes (**TikTok**, **YouTube**) sont des `href="#"` marqués `TODO`. La
+    page est en ligne mais **le contact n'est pas joignable** tant qu'ils ne
+    sont pas remplis. C'est un manque assumé, pas un oubli.
+  - `CT-03` n'a toujours pas évolué (voir `DT-S25-02`). M4 Diffusion continue
+    de rédiger ses brouillons à partir de `format` et `context`, qui ne sont
+    plus visibles nulle part ailleurs. **Le contrat est désormais le dernier
+    endroit du système à parler méthode** — c'est la prochaine décision à
+    prendre, contrat sous les yeux.
+  - Les **boutons de partage LinkedIn et X** qui figuraient en bas de la fiche
+    ont disparu dans la reconstruction de la page. Ils n'appartenaient pas à la
+    structure d'étude de cas demandée, et la diffusion est la responsabilité de
+    M4. Leur retour éventuel est une décision à part.
+
+- **Conséquences :**
+  - Nouvelle route privée `/dashboard/proofs/[id]`. Aucun ajout à l'allowlist
+    du proxy : tout ce qui n'y est pas déclaré est privé par défaut, et un test
+    le vérifie explicitement pour cette route.
+  - Un token d'accent unique (`--accent`, `--accent-hover`, `--accent-soft`,
+    `--accent-border`) dans `globals.css`. Aucune teinte d'accent n'est écrite
+    en dur dans les pages : rehabiller la vitrine tient en quatre valeurs.
+  - `docs/utilisateur.md` §7 entièrement réécrite sous **RM-01** : le parcours
+    documenté (fenêtre modale, « Publier la preuve 🚀 ») n'existait plus.
+  - Suite unitaire : 152 → 190 tests. Le test `public-pages.test.ts` rend
+    réellement les deux pages et vérifie l'**absence** de « méthode »,
+    « méthodologie », « certifié » et des valeurs de `format`/`context` :
+    la règle éditoriale devient une mesure, pas une relecture à l'œil.

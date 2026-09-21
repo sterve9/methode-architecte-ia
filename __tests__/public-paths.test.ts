@@ -41,6 +41,16 @@ describe('isPublicPath — tout le reste est privé par défaut', () => {
     expect(isPublicPath(path)).toBe(false)
   })
 
+  test("l'écran d'édition d'une étude de cas est privé (DT-S25-02)", () => {
+    // Un brouillon non publié y est lisible et modifiable : cette route ne
+    // doit jamais basculer du côté public, même par ressemblance de préfixe
+    // avec /p.
+    expect(isPublicPath('/dashboard/proofs')).toBe(false)
+    expect(
+      isPublicPath('/dashboard/proofs/0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0')
+    ).toBe(false)
+  })
+
   test('une route inconnue est privée : l’allowlist ne laisse rien passer par défaut', () => {
     expect(isPublicPath('/admin')).toBe(false)
     expect(isPublicPath('/api/secret')).toBe(false)
