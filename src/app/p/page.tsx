@@ -5,98 +5,265 @@ import { getPublicProofs } from '@/modules/m3-preuves/queries/get-public-proofs'
 
 export const revalidate = 60 // Revalidation ISR toutes les 60 secondes
 
+/**
+ * Vitrine publique (DT-S25-02).
+ *
+ * Ce que cette page ne dit JAMAIS : comment le travail a été produit. Pas de
+ * méthode, pas de phases, pas de livrables, pas de vocabulaire d'architecte.
+ * Un visiteur vient chercher son propre problème, résolu pour quelqu'un comme
+ * lui. Les champs `format` et `context`, dépréciés, ne sont pas lus ici.
+ *
+ * `title.absolute` neutralise le template du layout racine, qui suffixe
+ * « — Méthode Architecte IA ». Ce suffixe reste en vigueur côté dashboard.
+ */
 export const metadata: Metadata = {
-  title: 'Portfolio',
+  title: { absolute: 'Sterve — Systèmes IA & automatisation' },
   description:
-    "Récits de compétences, livrables techniques et cas d'usage conçus selon la Méthode Architecte IA.",
+    "J'automatise le travail répétitif des indépendants et petites entreprises : prospection, relances, suivi client, contenu. Chaque système est livré, mesuré et prouvé.",
 }
+
+const TRUST_ITEMS = [
+  { icon: '✅', label: 'Systèmes réels livrés, pas des maquettes' },
+  { icon: '📊', label: 'Résultats mesurés sur chaque projet' },
+  { icon: '⚡', label: 'Livraison rapide, un système à la fois' },
+]
+
+const SERVICES = [
+  {
+    title: 'Systèmes de prospection',
+    description: 'Trouver et prioriser vos prospects automatiquement',
+  },
+  {
+    title: 'Relances & suivi client',
+    description: 'Des relances au bon moment, sans y penser',
+  },
+  {
+    title: 'Automatisations sur mesure',
+    description: 'Un besoin répétitif ? Je conçois le système qui le fait tourner',
+  },
+]
 
 export default async function PublicPortfolioPage() {
   const proofs = await getPublicProofs()
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10 sm:py-16">
-      <div className="mx-auto w-full max-w-2xl">
-        <header className="mb-10 text-center">
-          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-blue-600">
-            Portfolio d&apos;Architecture IA
-          </span>
-          <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-            Récits de Compétences & Preuves
-          </h1>
-          <p className="mx-auto mt-2 max-w-md text-slate-600">
-            Démonstrateurs, livrables techniques et cas d&apos;usage conçus et validés
-            selon la Méthode Architecte IA.
+    <main className="min-h-screen bg-white text-slate-900">
+      {/* 1. HERO ------------------------------------------------------- */}
+      <section className="border-b border-slate-100 bg-gradient-to-b from-accent-soft to-white px-5 py-16 sm:py-24">
+        <div className="mx-auto w-full max-w-3xl text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.15em] text-accent sm:text-sm">
+            IA Automation Specialist · Architecte IA
           </p>
-        </header>
 
-        {proofs.length === 0 ? (
-          <div className="rounded-xl border border-slate-200 bg-white p-12 text-center">
-            <p className="text-slate-500">
-              Aucune preuve publique n&apos;a été publiée pour le moment.
-            </p>
+          <h1 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">
+            Je construis des systèmes IA qui font gagner des heures aux
+            indépendants et petites entreprises.
+          </h1>
+
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
+            J&apos;automatise le travail répétitif — prospection, relances, suivi
+            client, contenu — pour que vous vous concentriez sur votre métier.
+            Chaque système est livré, mesuré et prouvé.
+          </p>
+
+          <div className="mt-9 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+            <a
+              href="#contact"
+              className="rounded-full bg-accent px-7 py-3.5 text-center text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
+            >
+              Discutons de votre projet
+            </a>
+            <a
+              href="#cas"
+              className="rounded-full border border-slate-300 px-7 py-3.5 text-center text-sm font-semibold text-slate-700 transition-colors hover:border-slate-900 hover:text-slate-900"
+            >
+              Voir les cas concrets
+            </a>
           </div>
-        ) : (
-          <div className="flex flex-col gap-5">
-            {proofs.map((proof) => (
-              <article
-                key={proof.id}
-                className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
-              >
-                {proof.image_url && (
-                  <Link href={`/p/${proof.slug}`}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={proof.image_url}
-                      alt={proof.title}
-                      className="h-48 w-full border-b border-slate-100 object-cover"
-                      loading="lazy"
-                    />
-                  </Link>
-                )}
+        </div>
+      </section>
 
-                <div className="p-6">
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-xs font-semibold text-sky-700">
-                      {proof.format}
-                    </span>
-                    {proof.published_at && (
-                      <time className="text-xs text-slate-400">
-                        {new Date(proof.published_at).toLocaleDateString('fr-FR', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </time>
-                    )}
-                  </div>
+      {/* 2. BANDE DE CONFIANCE ----------------------------------------- */}
+      <section className="border-b border-slate-100 bg-slate-50 px-5 py-6">
+        <ul className="mx-auto flex w-full max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+          {TRUST_ITEMS.map((item) => (
+            <li
+              key={item.label}
+              className="flex items-center justify-center gap-2 text-sm font-medium text-slate-700"
+            >
+              <span aria-hidden="true">{item.icon}</span>
+              {item.label}
+            </li>
+          ))}
+        </ul>
+      </section>
 
-                  <h2 className="text-xl font-bold text-slate-900">
-                    <Link href={`/p/${proof.slug}`} className="hover:underline">
-                      {proof.title}
+      {/* 3. ÉTUDES DE CAS ---------------------------------------------- */}
+      <section id="cas" className="scroll-mt-8 px-5 py-16 sm:py-20">
+        <div className="mx-auto w-full max-w-5xl">
+          <h2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl">
+            Des problèmes réels, résolus et mesurés
+          </h2>
+
+          {proofs.length === 0 ? (
+            <p className="mx-auto mt-10 max-w-lg rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center text-sm text-slate-500">
+              Les premières études de cas arrivent. En attendant, parlons
+              directement de votre besoin —{' '}
+              <a href="#contact" className="font-semibold text-accent hover:underline">
+                écrivez-moi
+              </a>
+              .
+            </p>
+          ) : (
+            <div className="mt-10 grid gap-6 sm:grid-cols-2">
+              {proofs.map((proof) => (
+                <article
+                  key={proof.id}
+                  className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
+                >
+                  {proof.image_url && (
+                    <Link href={`/p/${proof.slug}`} aria-hidden="true" tabIndex={-1}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={proof.image_url}
+                        alt=""
+                        className="h-44 w-full border-b border-slate-100 object-cover"
+                        loading="lazy"
+                      />
                     </Link>
-                  </h2>
+                  )}
 
-                  <p className="mt-2 line-clamp-3 text-[0.95rem] leading-relaxed text-slate-600">
-                    {proof.summary}
-                  </p>
+                  <div className="flex flex-1 flex-col p-6">
+                    {proof.metier && (
+                      <p className="text-xs font-bold uppercase tracking-wider text-accent">
+                        {proof.metier}
+                      </p>
+                    )}
 
-                  <Link
-                    href={`/p/${proof.slug}`}
-                    className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-800"
-                  >
-                    Lire le récit complet →
-                  </Link>
-                </div>
-              </article>
+                    <h3 className="mt-2 text-lg font-bold leading-snug">
+                      <Link href={`/p/${proof.slug}`} className="hover:underline">
+                        {proof.title}
+                      </Link>
+                    </h3>
+
+                    {proof.resultat && (
+                      <p className="mt-3 rounded-lg border-l-4 border-accent bg-accent-soft px-4 py-2.5 text-sm font-semibold text-slate-800">
+                        {proof.resultat}
+                      </p>
+                    )}
+
+                    <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600">
+                      {proof.summary}
+                    </p>
+
+                    <Link
+                      href={`/p/${proof.slug}`}
+                      className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-accent hover:text-accent-hover"
+                    >
+                      Lire l&apos;étude de cas →
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* 4. SERVICES ---------------------------------------------------- */}
+      <section className="border-y border-slate-100 bg-slate-50 px-5 py-16 sm:py-20">
+        <div className="mx-auto w-full max-w-5xl">
+          <h2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl">
+            Ce que je peux automatiser pour vous
+          </h2>
+
+          <div className="mt-10 grid gap-5 sm:grid-cols-3">
+            {SERVICES.map((service) => (
+              <div
+                key={service.title}
+                className="rounded-2xl border border-slate-200 bg-white p-6"
+              >
+                <h3 className="text-base font-bold">{service.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                  {service.description}
+                </p>
+              </div>
             ))}
           </div>
-        )}
+        </div>
+      </section>
 
-        <footer className="mt-12 text-center text-sm text-slate-400">
-          Méthode Architecte IA — Propulsé par Next.js & Supabase
-        </footer>
-      </div>
+      {/* 5. À PROPOS ---------------------------------------------------- */}
+      <section className="px-5 py-16 sm:py-20">
+        <div className="mx-auto w-full max-w-2xl">
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">À propos</h2>
+          <p className="mt-5 text-base leading-relaxed text-slate-600">
+            Je suis Sterve, spécialiste en automatisation IA. Je conçois des
+            systèmes concrets qui suppriment le travail répétitif des
+            indépendants et petites structures — pour qu&apos;ils récupèrent du
+            temps et arrêtent de perdre des clients. Je pars d&apos;un problème
+            réel, je construis, je livre, je mesure. Chaque cas est une preuve,
+            pas une promesse.
+          </p>
+        </div>
+      </section>
+
+      {/* 6. CONTACT ----------------------------------------------------- */}
+      <section id="contact" className="scroll-mt-8 px-5 pb-16 sm:pb-20">
+        <div className="mx-auto w-full max-w-3xl rounded-3xl bg-slate-900 px-6 py-12 text-center sm:px-12 sm:py-16">
+          <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+            Discutons de votre projet
+          </h2>
+          <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-slate-300">
+            Décrivez-moi la tâche qui vous prend le plus de temps. Je vous dis
+            si elle est automatisable, et comment.
+          </p>
+
+          <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row">
+            {/* TODO : remplacer par le lien mailto réel */}
+            <a
+              href="#"
+              className="rounded-full bg-accent px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
+            >
+              M&apos;écrire
+            </a>
+            {/* TODO : remplacer par l'URL du profil LinkedIn */}
+            <a
+              href="#"
+              className="rounded-full border border-slate-600 px-7 py-3.5 text-sm font-semibold text-slate-200 transition-colors hover:border-white hover:text-white"
+            >
+              LinkedIn
+            </a>
+            {/* TODO : remplacer par l'URL du profil Nexlance */}
+            <a
+              href="#"
+              className="rounded-full border border-slate-600 px-7 py-3.5 text-sm font-semibold text-slate-200 transition-colors hover:border-white hover:text-white"
+            >
+              Nexlance
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. FOOTER ------------------------------------------------------ */}
+      <footer className="border-t border-slate-100 px-5 py-8">
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-3 text-center sm:flex-row sm:justify-between sm:text-left">
+          <p className="text-sm font-medium text-slate-500">
+            Systèmes livrés, mesurés, prouvés
+          </p>
+
+          <div className="flex items-center gap-5 text-xs text-slate-400">
+            {/* TODO : remplacer par l'URL de la chaîne TikTok */}
+            <a href="#" className="transition-colors hover:text-slate-700">
+              TikTok
+            </a>
+            {/* TODO : remplacer par l'URL de la chaîne YouTube */}
+            <a href="#" className="transition-colors hover:text-slate-700">
+              YouTube
+            </a>
+          </div>
+        </div>
+      </footer>
     </main>
   )
 }

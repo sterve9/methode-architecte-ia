@@ -3,11 +3,26 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /*
+   * Couleur d'accent de la surface publique (DT-S25-02).
+   * Placeholder neutre (indigo) : changer ces trois valeurs suffit à
+   * rehabiller /p et /p/[slug]. Aucune teinte d'accent ne doit être écrite
+   * en dur dans les pages — sinon ce token ne sert plus à rien.
+   */
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-soft: #eef2ff;
+  --accent-border: #c7d2fe;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-border: var(--accent-border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
