@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
+import { CONTACT_LINKS, SOCIAL_LINKS, activeLinks } from '@/lib/contact'
 import { getPublicProofs } from '@/modules/m3-preuves/queries/get-public-proofs'
 
 export const revalidate = 60 // Revalidation ISR toutes les 60 secondes
@@ -220,27 +221,32 @@ export default async function PublicPortfolioPage() {
           </p>
 
           <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row">
-            {/* TODO : remplacer par le lien mailto réel */}
-            <a
-              href="#"
-              className="rounded-full bg-accent px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
-            >
-              M&apos;écrire
-            </a>
-            {/* TODO : remplacer par l'URL du profil LinkedIn */}
-            <a
-              href="#"
-              className="rounded-full border border-slate-600 px-7 py-3.5 text-sm font-semibold text-slate-200 transition-colors hover:border-white hover:text-white"
-            >
-              LinkedIn
-            </a>
-            {/* TODO : remplacer par l'URL du profil Nexlance */}
-            <a
-              href="#"
-              className="rounded-full border border-slate-600 px-7 py-3.5 text-sm font-semibold text-slate-200 transition-colors hover:border-white hover:text-white"
-            >
-              Nexlance
-            </a>
+            {/*
+              Les canaux viennent de src/lib/contact.ts. Un canal encore fermé
+              y vaut `null` et n'est tout simplement pas rendu : pas de lien
+              mort sur une page qui invite à écrire.
+            */}
+            {activeLinks(CONTACT_LINKS).map((link, index) => {
+              // Un mailto reste dans le contexte courant ; un profil externe
+              // s'ouvre à côté, pour ne pas faire perdre la page au visiteur.
+              const isExternal = link.href.startsWith('http')
+
+              return (
+              <a
+                key={link.label}
+                href={link.href}
+                target={isExternal ? '_blank' : undefined}
+                rel={isExternal ? 'noopener noreferrer' : undefined}
+                className={
+                  index === 0
+                    ? 'rounded-full bg-accent px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-accent-hover'
+                    : 'rounded-full border border-slate-600 px-7 py-3.5 text-sm font-semibold text-slate-200 transition-colors hover:border-white hover:text-white'
+                }
+              >
+                {link.label}
+              </a>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -253,14 +259,17 @@ export default async function PublicPortfolioPage() {
           </p>
 
           <div className="flex items-center gap-5 text-xs text-slate-400">
-            {/* TODO : remplacer par l'URL de la chaîne TikTok */}
-            <a href="#" className="transition-colors hover:text-slate-700">
-              TikTok
-            </a>
-            {/* TODO : remplacer par l'URL de la chaîne YouTube */}
-            <a href="#" className="transition-colors hover:text-slate-700">
-              YouTube
-            </a>
+            {activeLinks(SOCIAL_LINKS).map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-colors hover:text-slate-700"
+              >
+                {link.label}
+              </a>
+            ))}
           </div>
         </div>
       </footer>

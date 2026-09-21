@@ -161,6 +161,49 @@ describe('/p — vitrine', () => {
     expect(container.querySelector('#contact')).toBeTruthy()
   })
 
+  test('les canaux de contact ouverts sont rendus, et aucun lien n’est mort', async () => {
+    getPublicProofsMock.mockResolvedValue([CASE_STUDY])
+
+    const { container } = render(await PublicPortfolioPage())
+
+    // Un href="#" sur une page qui invite à écrire est pire qu'un bouton
+    // absent : le visiteur clique et il ne se passe rien.
+    expect(container.querySelectorAll('a[href="#"]').length).toBe(0)
+
+    expect(
+      container.querySelector('a[href="mailto:contact@sterveshop.cloud"]')
+    ).toBeTruthy()
+    expect(
+      container.querySelector('a[href="https://www.linkedin.com/in/sterve-ai/"]')
+    ).toBeTruthy()
+    expect(
+      container.querySelector('a[href="https://www.tiktok.com/@sterve.architecte.ia"]')
+    ).toBeTruthy()
+    expect(
+      container.querySelector('a[href="https://www.youtube.com/@iaarchitecte"]')
+    ).toBeTruthy()
+  })
+
+  test('un canal pas encore ouvert n’affiche aucun bouton (Nexlance)', async () => {
+    getPublicProofsMock.mockResolvedValue([CASE_STUDY])
+
+    const { container } = render(await PublicPortfolioPage())
+
+    expect(container.innerHTML).not.toContain('Nexlance')
+  })
+
+  test('les liens sortants du pied de page s’ouvrent en sécurité', async () => {
+    getPublicProofsMock.mockResolvedValue([])
+
+    const { container } = render(await PublicPortfolioPage())
+    const external = container.querySelectorAll('a[href^="https://"]')
+
+    expect(external.length).toBeGreaterThan(0)
+    for (const link of external) {
+      expect(link.getAttribute('rel')).toContain('noopener')
+    }
+  })
+
   test('sans aucune preuve publiée, la page reste présentable', async () => {
     getPublicProofsMock.mockResolvedValue([])
 
