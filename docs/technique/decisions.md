@@ -922,3 +922,106 @@ croire que cette décision en fait partie.*
   de service complet. **Observé en `next dev` uniquement, non reproduit en
   production.** Sans lien avec la présente décision, mais c'est ce qui a
   imposé de vérifier en production plutôt qu'en local.
+
+---
+
+### DT-S25-02 — La Preuve publique devient une étude de cas orientée client ; la méthode sort de la couche publique
+
+- **Contexte :** l'objet `Preuve publique` avait été modélisé au Lot 4 comme un
+  **objet méthode** : `format` (« Cadre & Stratégie », « Architecture
+  Technique »…) et `context` (« contexte court du projet », en pratique le
+  contexte de production). La vitrine `/p` parlait donc de la méthode à des
+  visiteurs qui ne viennent pas acheter une méthode.
+
+  Rappel de `02.Probleme_Metier.md` : la preuve doit servir de **point de
+  conversion** pour un prospect. Un prospect ne se demande pas quelle phase de
+  méthode a produit le livrable ; il se demande si son problème à lui a déjà
+  été résolu pour quelqu'un comme lui.
+
+- **Décision :** restructurer la preuve en **étude de cas** : `metier`
+  (la cible), `probleme` (en langage client), `solution` (ce qui a été
+  construit, en clair), `resultat` (la transformation, chiffrée si la donnée
+  existe), `video_url` (démonstration). `title`, `slug`, `summary`,
+  `image_url`, `status`, `published_at`, `deliverable_id` sont conservés tels
+  quels.
+
+  `format` et `context` sont **dépréciés, pas supprimés** : colonnes
+  conservées, données conservées, `COMMENT ON COLUMN` posé en base, et retrait
+  de l'exposition publique traité dans l'étape suivante (les pages). Le contrat
+  CT-03 continue de les consommer — voir « Ce qui n'est PAS décidé ici ».
+
+  Découpage volontaire en deux étapes : **modèle de données d'abord, pages
+  ensuite**. Le modèle peut être vérifié (migration, types, tests) sans qu'une
+  seule ligne de rendu public ne bouge.
+
+- **Nullabilité — option A retenue :** les 5 colonnes sont `TEXT NULL`. Un
+  `NOT NULL` aurait échoué sur les preuves déjà publiées en production, et un
+  `NOT NULL DEFAULT ''` aurait accepté la chaîne vide, c'est-à-dire exactement
+  le cas qu'on veut interdire. La garantie de complétude vit donc dans
+  `domain/proof-rules.ts` : **une preuve ne peut passer en `publié` que si
+  `metier`, `probleme`, `solution` et `resultat` sont non vides une fois les
+  espaces retirés.** Un brouillon incomplet reste autorisé ; seule l'ouverture
+  au public est verrouillée. `video_url` et `image_url` sont recommandés et
+  **non bloquants** — un cas peut être vrai sans démonstration filmée.
+
+  Le verrou est posé aux deux points d'écriture qui exposent au public
+  (`updateProofStatus` et `updateProof`), et éprouvé par mutation : neutraliser
+  `getMissingCaseStudyFields` fait tomber 9 tests dans 3 fichiers.
+
+- **Action `updateProof` créée :** sans elle, les 5 champs n'étaient
+  remplissables qu'à la création, donc jamais corrigeables — le type
+  `UpdateProofInput` existait depuis le Lot 4 sans aucune action derrière.
+  Elle **n'écrit pas le statut** : elle délègue à `updateProofStatus`, qui
+  reste le seul point d'écriture du statut et le seul émetteur de l'événement
+  `CT-11`. Dupliquer cette logique ferait compter deux fois la même preuve dans
+  un journal append-only. L'ordre est volontaire — champs d'abord, statut
+  ensuite — pour que « remplir le cas puis publier » tienne en un seul appel.
+
+- **Alternatives écartées :**
+  - *Contrainte `NOT NULL` en base* — écartée : casse la migration sur les
+    données de production, et `DEFAULT ''` laisse passer le vide.
+  - *Supprimer les colonnes `format` et `context`* — écartée : destructif, et
+    `CT-03` les consomme encore. Une colonne dépréciée coûte un commentaire ;
+    une colonne supprimée coûte une restauration.
+  - *Laisser `updateProof` écrire le statut lui-même* — écartée : deux
+    émetteurs pour `CT-11`, donc un double comptage possible dans `events`,
+    qui est append-only et ne se corrige pas.
+  - *Traiter modèle et pages dans le même geste* — écartée : rien ne serait
+    vérifiable séparément.
+
+- **Ce qui n'est PAS décidé ici :** le **contrat CT-03** (C3 Preuves → C4
+  Diffusion) n'évolue pas. Il continue de porter `format` et `context`, qui
+  existent toujours en base. Le basculer sur les champs d'étude de cas change
+  ce que M4 rédige dans le brouillon de post : c'est une décision de contrat à
+  part entière, à prendre avec le contrat sous les yeux
+  (`07.Contrats.md`) — pas un effet de bord d'une migration. En attendant, M4
+  ne lit toujours pas `public_proofs` directement (`CA-06` respecté).
+
+  Non décidé non plus : le **formulaire** du dashboard. `create-proof-button`
+  propose encore « Format de preuve » et « Contexte & Méthodologie », et
+  n'expose aucun des 5 nouveaux champs. Conséquence mesurée et assumée : tant
+  que l'UI n'est pas reprise, ce bouton crée un brouillon puis **échoue à le
+  publier**, avec le message « Étude de cas incomplète : … ». C'est le verrou
+  qui fonctionne, pas une régression — mais il n'existe aujourd'hui aucun
+  écran pour remplir les champs. À traiter avec les pages.
+
+- **Conséquences :**
+  - Migration `20260921032542_add_case_study_fields_to_public_proofs.sql`,
+    jouée à la main dans le SQL Editor (aucun CLI Supabase ni `psql` sur la
+    machine, `.env.local` ne porte que la clé `anon`).
+  - **RLS : aucune modification.** Vérifié plutôt que supposé — la policy de
+    lecture publique est une policy de **ligne** (`USING status = 'publié'`),
+    Postgres n'ayant pas de RLS par colonne ; et le `GRANT SELECT ON
+    public_proofs TO anon` est au **niveau table**, donc il porte sur les
+    colonnes futures. À ne pas confondre avec `deliverables`, dont le grant est
+    **par colonnes** `(id, title, url)` et exigerait, lui, un ajout explicite.
+    Précédent qui confirme : `image_url` a été ajoutée sans grant et est bien
+    lue en production par un visiteur anonyme.
+  - Au passage : deux commentaires de code citaient une policy
+    `public_proofs_select_public` **qui n'a jamais existé**. Le vrai nom est
+    « Allow public read access to published proofs ». Corrigé dans
+    `get-public-proofs.ts` et `get-proof-by-slug.ts`.
+  - `03.Objets_Metier.md` et `06.Composants.md` révisés sous **RM-03**,
+    `docs/technique/base_de_donnees.md` sous **RM-02**.
+  - Suite unitaire : 127 → 152 tests, verte. Lint vert.
+

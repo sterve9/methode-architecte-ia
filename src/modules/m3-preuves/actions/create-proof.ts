@@ -5,6 +5,11 @@
  *
  * Règle métier : Le livrable source doit être au statut 'Publié' (M2).
  * project_id est récupéré via method_steps (deliverables n'a pas project_id).
+ *
+ * DT-S25-02 : la preuve naît en `brouillon` et porte désormais les champs de
+ * l'étude de cas (métier, problème, solution, résultat, vidéo). Ces champs
+ * sont OPTIONNELS à la création — un brouillon incomplet est légitime. C'est
+ * la publication qui exige un cas complet (voir updateProofStatus).
  */
 
 import { revalidatePath } from 'next/cache'
@@ -12,6 +17,12 @@ import { createClient } from '@/lib/supabase/server'
 import { generateSlug } from '../domain/slug-generator'
 import { isDeliverableEligibleForProof } from '../domain/proof-rules'
 import type { CreateProofInput } from '../types'
+
+/** Une chaîne vide ou blanche n'est pas un contenu : elle vaut NULL en base. */
+function toNullable(value?: string | null): string | null {
+  const trimmed = value?.trim()
+  return trimmed ? trimmed : null
+}
 
 export async function createProof(
   input: CreateProofInput
@@ -66,10 +77,15 @@ export async function createProof(
       deliverable_id: input.deliverable_id,
       title: input.title.trim(),
       slug,
-      format: input.format.trim(),
       summary: input.summary.trim(),
-      context: input.context?.trim() || null,
-      image_url: input.image_url?.trim() || null,
+      metier: toNullable(input.metier),
+      probleme: toNullable(input.probleme),
+      solution: toNullable(input.solution),
+      resultat: toNullable(input.resultat),
+      video_url: toNullable(input.video_url),
+      image_url: toNullable(input.image_url),
+      format: input.format.trim(),
+      context: toNullable(input.context),
       status: 'brouillon',
     })
     .select('id, slug')

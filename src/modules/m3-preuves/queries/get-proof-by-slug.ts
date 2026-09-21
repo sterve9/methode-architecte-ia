@@ -2,7 +2,11 @@
  * Query M3 : Récupérer une preuve publique par son slug.
  *
  * Usage : Page publique /p/[slug].
- * Sécurité : RLS Supabase (public_proofs_select_public) filtre automatiquement.
+ *
+ * Sécurité : la policy RLS Supabase « Allow public read access to published
+ * proofs » (migration 20260824091514) filtre automatiquement sur
+ * `status = 'publié'`. C'est une policy de LIGNE : elle couvre toutes les
+ * colonnes, y compris les champs d'étude de cas ajoutés par DT-S25-02.
  */
 
 import { createClient } from '@/lib/supabase/server'

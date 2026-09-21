@@ -232,12 +232,22 @@ describe('createDeliverable — événement « Livrable attaché » (CT-10)', ()
 // ---------------------------------------------------------------------------
 
 describe('updateProofStatus — événement « Preuve publiée » (CT-11)', () => {
+  /**
+   * Étude de cas COMPLÈTE : depuis DT-S25-02, updateProofStatus refuse de
+   * publier une preuve à trous. Une fixture incomplète ferait échouer la
+   * publication avant même d'atteindre l'émission de l'événement, et ces
+   * tests ne prouveraient plus rien sur CT-11.
+   */
   const draftProof = {
     data: {
       status: 'brouillon',
       slug: 'refonte-tunnel',
       deliverable_id: 'deliverable-1',
       published_at: null,
+      metier: 'Gestion de réseaux sociaux',
+      probleme: 'Aucune conversion malgré un volume de prospects élevé.',
+      solution: 'Un CRM de prospection qui qualifie et relance automatiquement.',
+      resultat: 'Taux de réponse passé de 4 % à 19 % en six semaines.',
       deliverables: { method_steps: { project_id: 'project-uuid-1' } },
     },
     error: null,
@@ -283,5 +293,33 @@ describe('updateProofStatus — événement « Preuve publiée » (CT-11)', () =
 
     expect(result.success).toBe(true)
     expect(recordEventMock).not.toHaveBeenCalled()
+  })
+
+  test("refuse de publier une étude de cas à trous, et n'émet donc rien (DT-S25-02)", async () => {
+    stubTables({
+      public_proofs: {
+        data: { ...draftProof.data, resultat: null },
+        error: null,
+      },
+    })
+
+    const result = await updateProofStatus('proof-1', 'publié')
+
+    expect(result.success).toBe(false)
+    expect(result.error).toContain('Résultat obtenu')
+    expect(recordEventMock).not.toHaveBeenCalled()
+  })
+
+  test('un retrait reste possible même si le cas est incomplet', async () => {
+    stubTables({
+      public_proofs: {
+        data: { ...draftProof.data, status: 'publié', published_at: '2026-08-01T10:00:00.000Z', metier: null },
+        error: null,
+      },
+    })
+
+    const result = await updateProofStatus('proof-1', 'archivé')
+
+    expect(result.success).toBe(true)
   })
 })

@@ -78,6 +78,19 @@ La table `events` a été introduite au Lot 5 (Instrumentation), voir
   (`20260829020045_add_image_url_to_public_proofs.sql`).
 - Une preuve référence un unique livrable source (`deliverable_id NOT NULL`) —
   cardinalité N livrables sources différée post-MVP (`DT-Lot4-01`).
+- **Champs d'étude de cas** (`DT-S25-02`,
+  `20260921032542_add_case_study_fields_to_public_proofs.sql`) : `metier`,
+  `probleme`, `solution`, `resultat`, `video_url`, tous `TEXT NULL`.
+  La nullabilité est délibérée : un `NOT NULL` aurait échoué sur les preuves
+  déjà en production, et un `DEFAULT ''` aurait accepté la chaîne vide, soit
+  exactement le cas à interdire. **La complétude est une règle métier**
+  (`m3-preuves/domain/proof-rules.ts`), appliquée au seul passage en `publié`.
+- `format` et `context` sont **dépréciés** (`DT-S25-02`) : colonnes et données
+  conservées, `COMMENT ON COLUMN` posé en base, plus d'exposition publique.
+  Encore consommés par le contrat `CT-03` vers M4.
+- **Pas de grant à ajouter pour une nouvelle colonne** : `GRANT SELECT ON
+  public_proofs TO anon` est au niveau table, donc il porte sur les colonnes
+  futures. C'est l'inverse de `deliverables`, dont le grant est par colonnes.
 
 ---
 

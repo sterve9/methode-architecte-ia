@@ -2,7 +2,14 @@
  * Query M3 : Récupérer toutes les preuves publiques.
  *
  * Usage : Page publique /p (Portfolio).
- * Sécurité : RLS Supabase (public_proofs_select_public) filtre automatiquement.
+ *
+ * Sécurité : la policy RLS Supabase « Allow public read access to published
+ * proofs » (migration 20260824091514) filtre automatiquement sur
+ * `status = 'publié'`. C'est une policy de LIGNE : elle couvre toutes les
+ * colonnes, y compris les champs d'étude de cas ajoutés par DT-S25-02.
+ * Le `.eq('status', 'publié')` ci-dessous est redondant avec la policy et
+ * conservé volontairement : la requête reste juste même en session
+ * authentifiée, où la policy `authenticated` donne accès à tout.
  */
 
 import { createClient } from '@/lib/supabase/server'

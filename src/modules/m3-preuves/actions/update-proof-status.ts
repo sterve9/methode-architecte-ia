@@ -5,12 +5,17 @@
  *
  * Règle métier : Utilise proof-rules.ts pour valider la transition.
  * Contrat CT-11 : la première publication est signalée à M5 Instrumentation.
+ *
+ * DT-S25-02 : cette action est le SEUL point d'écriture du statut, donc le
+ * seul endroit où la vitrine peut s'ouvrir. La garantie « pas de cas à trous
+ * en public » s'applique donc ici, sur l'état réellement en base au moment du
+ * basculement — et non sur ce que l'appelant croit avoir enregistré.
  */
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { recordEvent } from '@/modules/m5-mesures/actions/record-event'
-import { canTransitionProofStatus } from '../domain/proof-rules'
+import { canTransitionProofStatus, getPublicationBlockingReason } from '../domain/proof-rules'
 import type { ProofStatus } from '../types'
 
 /**
@@ -23,6 +28,10 @@ type ProofStatusRow = {
   slug: string
   deliverable_id: string
   published_at: string | null
+  metier: string | null
+  probleme: string | null
+  solution: string | null
+  resultat: string | null
   deliverables: {
     method_steps: {
       project_id: string
@@ -45,7 +54,9 @@ export async function updateProofStatus(
   // 2. Récupérer la preuve actuelle (avec published_at et le projet porteur)
   const { data, error: fetchError } = await supabase
     .from('public_proofs')
-    .select('status, slug, deliverable_id, published_at, deliverables(method_steps(project_id))')
+    .select(
+      'status, slug, deliverable_id, published_at, metier, probleme, solution, resultat, deliverables(method_steps(project_id))'
+    )
     .eq('id', proofId)
     .single()
 
@@ -60,7 +71,17 @@ export async function updateProofStatus(
     return { success: false, error: `Transition interdite de ${proof.status} vers ${newStatus}.` }
   }
 
-  // 4. Mise à jour du statut
+  // 4. Verrou de complétude (DT-S25-02) : une étude de cas à trous ne passe
+  //    pas en public. Contrôlé pour TOUT passage en 'publié', y compris une
+  //    republication — l'état de la preuve a pu être vidé entre-temps.
+  if (newStatus === 'publié') {
+    const blockingReason = getPublicationBlockingReason(proof)
+    if (blockingReason) {
+      return { success: false, error: blockingReason }
+    }
+  }
+
+  // 5. Mise à jour du statut
   //    canTransitionProofStatus autorise publié → publié (idempotence) : c'est
   //    published_at, et non le statut cible, qui distingue une VRAIE première
   //    publication d'un simple renvoi. Le même booléen sert donc à horodater
@@ -83,7 +104,7 @@ export async function updateProofStatus(
     return { success: false, error: `Erreur SQL : ${updateError.message}` }
   }
 
-  // 5. Contrat CT-11 : signaler la publication de la preuve à M5.
+  // 6. Contrat CT-11 : signaler la publication de la preuve à M5.
   const projectId = proof.deliverables?.method_steps?.project_id ?? null
 
   if (isFirstPublication && projectId) {
@@ -94,7 +115,7 @@ export async function updateProofStatus(
     })
   }
 
-  // 6. Invalidation du cache
+  // 7. Invalidation du cache
   revalidatePath(`/p/${proof.slug}`)
   revalidatePath('/p')
   revalidatePath('/dashboard/diffusion')
