@@ -66,7 +66,7 @@ export default async function MesuresPage({
     <main className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto w-full max-w-3xl space-y-6">
         <nav>
-          <Link href="/dashboard" className="text-sm text-blue-600 hover:underline">
+          <Link href="/dashboard" className="text-sm text-accent hover:underline">
             ← Retour au dashboard
           </Link>
         </nav>
@@ -140,7 +140,7 @@ export default async function MesuresPage({
             <p>
               Les événements des projets de test (« [E2E] … ») sont{' '}
               <strong>inclus</strong>.{' '}
-              <Link href="/dashboard/mesures" className="text-blue-600 hover:underline">
+              <Link href="/dashboard/mesures" className="text-accent hover:underline">
                 Revenir à la cadence réelle
               </Link>
             </p>
@@ -151,7 +151,7 @@ export default async function MesuresPage({
               journal ne se réécrit pas.{' '}
               <Link
                 href="/dashboard/mesures?tests=1"
-                className="text-blue-600 hover:underline"
+                className="text-accent hover:underline"
               >
                 Les afficher quand même
               </Link>

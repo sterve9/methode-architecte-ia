@@ -55,7 +55,7 @@ export default async function ProjectsPage({
           href="/dashboard/projects/new"
           style={{
             padding: '0.5rem 1rem',
-            background: '#0070f3',
+            background: 'var(--accent)',
             color: 'white',
             borderRadius: '4px',
             textDecoration: 'none',
@@ -103,7 +103,7 @@ export default async function ProjectsPage({
                       padding: '0.2rem 0.6rem',
                       borderRadius: '4px',
                       background:
-                        project.status === 'Archivé' ? '#ddd' : '#e8f4ff',
+                        project.status === 'Archivé' ? '#ddd' : 'var(--accent-soft)',
                       fontSize: '0.85rem',
                     }}
                   >
@@ -132,7 +132,7 @@ export default async function ProjectsPage({
           <p style={{ margin: 0 }}>
             Les projets de test («&nbsp;[E2E]&nbsp;…&nbsp;») sont{' '}
             <strong>inclus</strong>.{' '}
-            <Link href="/dashboard/projects" style={{ color: '#0070f3' }}>
+            <Link href="/dashboard/projects" style={{ color: 'var(--accent)' }}>
               Revenir aux projets réels
             </Link>
           </p>
@@ -141,7 +141,7 @@ export default async function ProjectsPage({
             Les projets de test («&nbsp;[E2E]&nbsp;…&nbsp;») sont écartés de
             cette vue. Ils restent en base : le test E2E en recrée à chaque
             exécution, les masquer tient dans le temps, les effacer non.{' '}
-            <Link href="/dashboard/projects?tests=1" style={{ color: '#0070f3' }}>
+            <Link href="/dashboard/projects?tests=1" style={{ color: 'var(--accent)' }}>
               Les afficher quand même
             </Link>
           </p>

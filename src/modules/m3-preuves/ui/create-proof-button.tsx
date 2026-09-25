@@ -66,9 +66,9 @@ export function CreateProofButton({
           padding: '0.15rem 0.5rem',
           fontSize: '0.75rem',
           borderRadius: '4px',
-          border: '1px solid #0070f3',
-          background: '#e6f0ff',
-          color: '#0070f3',
+          border: '1px solid var(--accent)',
+          background: 'var(--accent-soft)',
+          color: 'var(--accent)',
           cursor: isPending ? 'not-allowed' : 'pointer',
           fontWeight: '500',
         }}

@@ -38,8 +38,8 @@ export function AddDeliverableForm({ stepId }: AddDeliverableFormProps) {
           padding: '0.2rem 0.6rem',
           fontSize: '0.8rem',
           background: 'none',
-          border: '1px dashed #0070f3',
-          color: '#0070f3',
+          border: '1px dashed var(--accent)',
+          color: 'var(--accent)',
           borderRadius: '4px',
           cursor: 'pointer',
         }}
@@ -140,7 +140,7 @@ export function AddDeliverableForm({ stepId }: AddDeliverableFormProps) {
           style={{
             padding: '0.25rem 0.6rem',
             fontSize: '0.8rem',
-            background: '#0070f3',
+            background: 'var(--accent)',
             color: 'white',
             border: 'none',
             borderRadius: '4px',

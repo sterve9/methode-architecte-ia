@@ -349,7 +349,7 @@ export function CaseStudyForm({ proof, missingLabels }: CaseStudyFormProps) {
           disabled={isBusy}
           style={{
             padding: '0.5rem 1rem',
-            background: '#0070f3',
+            background: 'var(--accent)',
             color: 'white',
             border: 'none',
             borderRadius: '4px',

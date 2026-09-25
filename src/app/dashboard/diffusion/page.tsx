@@ -31,7 +31,7 @@ export default async function DiffusionPage() {
     <main className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto w-full max-w-3xl space-y-6">
         <nav>
-          <Link href="/dashboard" className="text-sm text-blue-600 hover:underline">
+          <Link href="/dashboard" className="text-sm text-accent hover:underline">
             ← Retour au dashboard
           </Link>
         </nav>
@@ -58,7 +58,7 @@ export default async function DiffusionPage() {
                 className="space-y-3 rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
               >
                 <div>
-                  <span className="inline-block rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+                  <span className="inline-block rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent">
                     {proof.format}
                   </span>
                   <h2 className="mt-2 font-semibold text-gray-900">{proof.title}</h2>
@@ -72,7 +72,7 @@ export default async function DiffusionPage() {
                     <Link
                       href={`/p/${proof.slug}`}
                       target="_blank"
-                      className="text-xs text-blue-600 hover:underline"
+                      className="text-xs text-accent hover:underline"
                     >
                       Voir la preuve publique ↗
                     </Link>

@@ -48,7 +48,7 @@ export function DeliverableItem({ deliverable }: DeliverableItemProps) {
             rel="noopener noreferrer"
             style={{
               fontSize: '0.8rem',
-              color: '#0070f3',
+              color: 'var(--accent)',
               textDecoration: 'underline',
               overflow: 'hidden',
               textOverflow: 'ellipsis',

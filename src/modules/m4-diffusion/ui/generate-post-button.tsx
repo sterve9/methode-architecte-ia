@@ -49,7 +49,7 @@ function CopyableBlock({
         </div>
         <button
           onClick={handleCopy}
-          className="rounded-md bg-blue-600 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-700"
+          className="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-white hover:bg-accent-hover"
         >
           {isCopied ? 'Copié ✓' : 'Copier'}
         </button>
@@ -59,7 +59,7 @@ function CopyableBlock({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         rows={rows}
-        className="block w-full rounded-md border border-slate-300 p-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="block w-full rounded-md border border-slate-300 p-3 text-sm text-slate-900 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
       />
 
       <div className="flex justify-between text-xs">

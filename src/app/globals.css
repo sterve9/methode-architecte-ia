@@ -5,15 +5,28 @@
   --foreground: #171717;
 
   /*
-   * Couleur d'accent de la surface publique (DT-S25-02).
-   * Placeholder neutre (indigo) : changer ces trois valeurs suffit à
-   * rehabiller /p et /p/[slug]. Aucune teinte d'accent ne doit être écrite
-   * en dur dans les pages — sinon ce token ne sert plus à rien.
+   * Couleur d'accent de l'application — vert de marque Sterveshop.
+   *
+   * La référence de marque est #22C55E, mais elle n'est PAS utilisée telle
+   * quelle : mesurée, elle ne donne que 2.28:1 avec du texte blanc, très
+   * loin du minimum AA de 4.5:1. Un bouton vert à texte blanc y serait
+   * illisible, et `text-accent` sur fond blanc aussi.
+   *
+   * Valeurs retenues, contrastes WCAG mesurés :
+   *   --accent        #15803D  5.02:1 sur blanc (AA texte) · 3.56:1 sur
+   *                            slate-900 (AA composant d'interface)
+   *   --accent-hover  #166534  7.13:1 sur blanc
+   *   --accent-soft   #DCFCE7  13.32:1 avec le texte slate-800 posé dessus
+   *
+   * Même teinte de marque, nuance assombrie pour rester lisible partout.
+   * Ces quatre valeurs sont le SEUL endroit où une couleur d'accent est
+   * écrite : les pages publiques passent par les utilitaires Tailwind
+   * `accent-*`, le dashboard par `var(--accent)` dans ses styles en ligne.
    */
-  --accent: #4f46e5;
-  --accent-hover: #4338ca;
-  --accent-soft: #eef2ff;
-  --accent-border: #c7d2fe;
+  --accent: #15803d;
+  --accent-hover: #166534;
+  --accent-soft: #dcfce7;
+  --accent-border: #bbf7d0;
 }
 
 @theme inline {

@@ -28,7 +28,7 @@ export default async function DashboardPage() {
         <div className="space-y-3 pt-2">
           <Link
             href="/dashboard/projects"
-            className="flex w-full items-center justify-center gap-2 rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-blue-700 transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-accent-hover transition-colors"
           >
             📁 Accéder à mes Projets
           </Link>

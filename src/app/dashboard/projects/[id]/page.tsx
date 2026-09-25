@@ -80,7 +80,7 @@ export default async function ProjectDetailPage({
           style={{
             padding: '0.2rem 0.6rem',
             borderRadius: '4px',
-            background: isArchived ? '#ddd' : '#e8f4ff',
+            background: isArchived ? '#ddd' : 'var(--accent-soft)',
           }}
         >
           {project.status}
@@ -211,7 +211,7 @@ export default async function ProjectDetailPage({
           href={`/dashboard/projects/${project.id}/edit`}
           style={{
             padding: '0.5rem 1rem',
-            background: '#0070f3',
+            background: 'var(--accent)',
             color: 'white',
             borderRadius: '4px',
             textDecoration: 'none',
