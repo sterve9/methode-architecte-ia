@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
@@ -50,7 +51,10 @@ export default async function PublicPortfolioPage() {
   return (
     <main className="min-h-screen bg-white text-slate-900">
       {/* 1. HERO ------------------------------------------------------- */}
-      <section className="border-b border-slate-100 bg-gradient-to-b from-accent-soft to-white px-5 py-16 sm:py-24">
+      <section
+        id="haut"
+        className="border-b border-slate-100 bg-gradient-to-b from-accent-soft to-white px-5 py-16 sm:py-24"
+      >
         <div className="mx-auto w-full max-w-3xl text-center">
           <p className="text-xs font-bold uppercase tracking-[0.15em] text-accent sm:text-sm">
             IA Automation Specialist · Architecte IA
@@ -195,7 +199,7 @@ export default async function PublicPortfolioPage() {
       </section>
 
       {/* 5. À PROPOS ---------------------------------------------------- */}
-      <section className="px-5 py-16 sm:py-20">
+      <section id="demarche" className="scroll-mt-8 px-5 py-16 sm:py-20">
         <div className="mx-auto w-full max-w-2xl">
           <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">À propos</h2>
           <p className="mt-5 text-base leading-relaxed text-slate-600">
@@ -252,24 +256,89 @@ export default async function PublicPortfolioPage() {
       </section>
 
       {/* 7. FOOTER ------------------------------------------------------ */}
-      <footer className="border-t border-slate-100 px-5 py-8">
-        <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-3 text-center sm:flex-row sm:justify-between sm:text-left">
-          <p className="text-sm font-medium text-slate-500">
-            Systèmes livrés, mesurés, prouvés
-          </p>
+      <footer className="border-t-2 border-slate-200 bg-slate-50 px-5 pt-12 pb-6">
+        <div className="mx-auto w-full max-w-5xl">
+          <div className="grid gap-10 sm:grid-cols-3">
+            {/* Marque — le logo porte déjà le nom, on ne le réécrit pas. */}
+            <div>
+              <div className="flex items-center gap-3">
+                <Image
+                  src="/logo-sterveshop.png"
+                  alt="Sterveshop"
+                  width={36}
+                  height={36}
+                  className="h-9 w-auto"
+                />
+                <span className="text-sm font-medium text-slate-500">
+                  Architecte IA
+                </span>
+              </div>
 
-          <div className="flex items-center gap-5 text-xs text-slate-400">
-            {activeLinks(SOCIAL_LINKS).map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-colors hover:text-slate-700"
-              >
-                {link.label}
-              </a>
-            ))}
+              <p className="mt-4 text-sm font-semibold text-slate-700">
+                Systèmes livrés, mesurés, prouvés.
+              </p>
+
+              <p className="mt-2 text-sm leading-relaxed text-slate-500">
+                J&apos;automatise les tâches répétitives qui font perdre des
+                heures — et je livre la preuve chiffrée que ça marche.
+              </p>
+            </div>
+
+            {/* Naviguer — uniquement des ancres qui existent sur la page. */}
+            <nav aria-label="Navigation du pied de page">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                Naviguer
+              </h2>
+              <ul className="mt-4 space-y-2.5 text-sm">
+                {[
+                  { label: 'Études de cas', href: '#cas' },
+                  { label: 'Ma démarche', href: '#demarche' },
+                  { label: 'Me contacter', href: '#contact' },
+                ].map((item) => (
+                  <li key={item.href}>
+                    <a
+                      href={item.href}
+                      className="text-slate-500 transition-colors hover:text-accent"
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            {/* Me joindre — canaux issus de src/lib/contact.ts. */}
+            <div>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                Me joindre
+              </h2>
+              <ul className="mt-4 space-y-2.5 text-sm">
+                {activeLinks([...CONTACT_LINKS, ...SOCIAL_LINKS]).map((link) => {
+                  const isExternal = link.href.startsWith('http')
+
+                  return (
+                    <li key={link.label}>
+                      <a
+                        href={link.href}
+                        target={isExternal ? '_blank' : undefined}
+                        rel={isExternal ? 'noopener noreferrer' : undefined}
+                        className="text-slate-500 transition-colors hover:text-accent"
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          </div>
+
+          {/* Barre du bas ------------------------------------------------ */}
+          <div className="mt-10 flex flex-col items-center gap-3 border-t border-slate-200 pt-6 text-xs text-slate-400 sm:flex-row sm:justify-between">
+            <p>© 2026 Sterveshop · Architecte IA</p>
+            <a href="#haut" className="transition-colors hover:text-slate-700">
+              ↑ Haut de page
+            </a>
           </div>
         </div>
       </footer>

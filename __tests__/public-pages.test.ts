@@ -204,6 +204,71 @@ describe('/p — vitrine', () => {
     }
   })
 
+  test('le footer porte le logo, et ne réécrit pas la marque en texte', async () => {
+    getPublicProofsMock.mockResolvedValue([CASE_STUDY])
+
+    const { container } = render(await PublicPortfolioPage())
+    const footer = container.querySelector('footer')!
+
+    const logo = footer.querySelector('img[alt="Sterveshop"]')
+    expect(logo).toBeTruthy()
+    expect(logo?.getAttribute('src')).toContain('logo-sterveshop')
+
+    // Le logo porte déjà le nom : le répéter à côté ferait doublon. Seule la
+    // ligne de copyright a le droit de l'écrire.
+    const brandBlock = footer.querySelector('div')!
+    expect(brandBlock.textContent).toContain('Architecte IA')
+
+    expect(footer.textContent).toContain('© 2026 Sterveshop · Architecte IA')
+  })
+
+  test('le footer expose ses trois colonnes et sa barre du bas', async () => {
+    getPublicProofsMock.mockResolvedValue([])
+
+    const { container } = render(await PublicPortfolioPage())
+    const footer = container.querySelector('footer')!
+
+    expect(footer.textContent).toContain('Systèmes livrés, mesurés, prouvés.')
+    expect(footer.textContent).toContain('preuve chiffrée que ça marche')
+    expect(footer.textContent).toContain('Naviguer')
+    expect(footer.textContent).toContain('Me joindre')
+    expect(footer.textContent).toContain('↑ Haut de page')
+  })
+
+  test('toute ancre de la page pointe vers une section qui existe', async () => {
+    getPublicProofsMock.mockResolvedValue([CASE_STUDY])
+
+    const { container } = render(await PublicPortfolioPage())
+
+    const anchors = [...container.querySelectorAll('a[href^="#"]')]
+      .map((a) => a.getAttribute('href')!.slice(1))
+      .filter(Boolean)
+
+    expect(anchors.length).toBeGreaterThan(0)
+
+    for (const id of anchors) {
+      expect(container.querySelector(`#${id}`), `ancre #${id} sans cible`).toBeTruthy()
+    }
+  })
+
+  test('les canaux du footer reprennent ceux de la source unique', async () => {
+    getPublicProofsMock.mockResolvedValue([])
+
+    const { container } = render(await PublicPortfolioPage())
+    const footer = container.querySelector('footer')!
+
+    for (const href of [
+      'mailto:contact@sterveshop.cloud',
+      'https://www.linkedin.com/in/sterve-ai/',
+      'https://www.youtube.com/@iaarchitecte',
+      'https://www.tiktok.com/@sterve.architecte.ia',
+    ]) {
+      expect(footer.querySelector(`a[href="${href}"]`), href).toBeTruthy()
+    }
+
+    expect(footer.textContent).not.toContain('Nexlance')
+  })
+
   test('sans aucune preuve publiée, la page reste présentable', async () => {
     getPublicProofsMock.mockResolvedValue([])
 
