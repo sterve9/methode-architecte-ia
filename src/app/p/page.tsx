@@ -5,6 +5,9 @@ import type { Metadata } from 'next'
 import { CONTACT_LINKS, SOCIAL_LINKS, activeLinks } from '@/lib/contact'
 import { getPublicProofs } from '@/modules/m3-preuves/queries/get-public-proofs'
 
+import { CaseAnatomy } from './_components/case-anatomy'
+import { SiteNav } from './_components/site-nav'
+
 export const revalidate = 60 // Revalidation ISR toutes les 60 secondes
 
 /**
@@ -27,8 +30,16 @@ export const metadata: Metadata = {
 const TRUST_ITEMS = [
   { icon: '✅', label: 'Systèmes réels livrés, pas des maquettes' },
   { icon: '📊', label: 'Résultats mesurés sur chaque projet' },
+  { icon: '🌍', label: 'Disponible à distance, où que vous soyez' },
   { icon: '⚡', label: 'Livraison rapide, un système à la fois' },
 ]
+
+/**
+ * Cartes « en préparation » (SPEC-p S4, D2, D3) : les métiers dont une étude
+ * de cas est en cours. Elles suivent toujours les cartes réelles et ne
+ * portent ni lien ni résultat — rien n'est promis tant que rien n'est livré.
+ */
+const PREPARED_CASES = ['Avocat', 'Commerce local', 'Comptable', 'Coach', 'Agence']
 
 const SERVICES = [
   {
@@ -49,78 +60,88 @@ export default async function PublicPortfolioPage() {
   const proofs = await getPublicProofs()
 
   return (
-    <main className="min-h-screen bg-white text-slate-900">
-      {/* 1. HERO ------------------------------------------------------- */}
-      <section
-        id="haut"
-        className="border-b border-slate-100 bg-gradient-to-b from-accent-soft to-white px-5 py-16 sm:py-24"
-      >
-        <div className="mx-auto w-full max-w-3xl text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.15em] text-accent sm:text-sm">
-            IA Automation Specialist · Architecte IA
-          </p>
+    <>
+      <SiteNav />
 
-          <h1 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-            Je construis des systèmes IA qui font gagner des heures aux
-            indépendants et petites entreprises.
-          </h1>
-
-          <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
-            J&apos;automatise le travail répétitif — prospection, relances, suivi
-            client, contenu — pour que vous vous concentriez sur votre métier.
-            Chaque système est livré, mesuré et prouvé.
-          </p>
-
-          <div className="mt-9 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-            <a
-              href="#contact"
-              className="rounded-full bg-accent px-7 py-3.5 text-center text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
-            >
-              Discutons de votre projet
-            </a>
-            <a
-              href="#cas"
-              className="rounded-full border border-slate-300 px-7 py-3.5 text-center text-sm font-semibold text-slate-700 transition-colors hover:border-slate-900 hover:text-slate-900"
-            >
-              Voir les cas concrets
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. BANDE DE CONFIANCE ----------------------------------------- */}
-      <section className="border-b border-slate-100 bg-slate-50 px-5 py-6">
-        <ul className="mx-auto flex w-full max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-          {TRUST_ITEMS.map((item) => (
-            <li
-              key={item.label}
-              className="flex items-center justify-center gap-2 text-sm font-medium text-slate-700"
-            >
-              <span aria-hidden="true">{item.icon}</span>
-              {item.label}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* 3. ÉTUDES DE CAS ---------------------------------------------- */}
-      <section id="cas" className="scroll-mt-8 px-5 py-16 sm:py-20">
-        <div className="mx-auto w-full max-w-5xl">
-          <h2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl">
-            Des problèmes réels, résolus et mesurés
-          </h2>
-
-          {proofs.length === 0 ? (
-            <p className="mx-auto mt-10 max-w-lg rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center text-sm text-slate-500">
-              Les premières études de cas arrivent. En attendant, parlons
-              directement de votre besoin —{' '}
-              <a href="#contact" className="font-semibold text-accent hover:underline">
-                écrivez-moi
-              </a>
-              .
+      <main className="min-h-screen bg-white text-slate-900">
+        {/* 1. HERO ------------------------------------------------------- */}
+        <section
+          id="haut"
+          className="scroll-mt-28 border-b border-slate-100 bg-gradient-to-b from-accent-soft to-white px-5 py-16 sm:scroll-mt-20 sm:py-24"
+        >
+          <div className="mx-auto w-full max-w-3xl text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.15em] text-accent sm:text-sm">
+              IA Automation Specialist · Architecte IA
             </p>
-          ) : (
-            <div className="mt-10 grid gap-6 sm:grid-cols-2">
+
+            <h1 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">
+              Je construis des systèmes IA qui font gagner des heures aux
+              indépendants et petites entreprises.
+            </h1>
+
+            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
+              J&apos;automatise le travail répétitif — prospection, relances, suivi
+              client, contenu — pour que vous vous concentriez sur votre métier.
+              Chaque système est livré, mesuré et prouvé.
+            </p>
+
+            <div className="mt-9 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+              <a
+                href="#contact"
+                className="rounded-full bg-accent px-7 py-3.5 text-center text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
+              >
+                Discutons de votre projet
+              </a>
+              <a
+                href="#cas"
+                className="rounded-full border border-slate-300 px-7 py-3.5 text-center text-sm font-semibold text-slate-700 transition-colors hover:border-slate-900 hover:text-slate-900"
+              >
+                Voir les cas concrets
+              </a>
+            </div>
+
+            <p className="mt-6 text-sm text-slate-500">
+              <span className="font-semibold text-slate-700">Exemple réel :</span>{' '}
+              2 h/jour → 25 leads en 2 min
+            </p>
+          </div>
+        </section>
+
+        {/* 2. BANDE DE CONFIANCE ----------------------------------------- */}
+        <section className="border-b border-slate-100 bg-slate-50 px-5 py-6">
+          <ul className="mx-auto flex w-full max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+            {TRUST_ITEMS.map((item) => (
+              <li
+                key={item.label}
+                className="flex items-center justify-center gap-2 text-sm font-medium text-slate-700"
+              >
+                <span aria-hidden="true">{item.icon}</span>
+                {item.label}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* 3. ÉTUDES DE CAS ---------------------------------------------- */}
+        <section id="cas" className="scroll-mt-28 px-5 py-16 sm:scroll-mt-20 sm:py-20">
+          <div className="mx-auto w-full max-w-5xl">
+            <h2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl">
+              Des problèmes réels, résolus et mesurés
+            </h2>
+
+            {proofs.length === 0 && (
+              <p className="mx-auto mt-6 max-w-lg text-center text-sm text-slate-500">
+                Les premières études de cas arrivent. En attendant, parlons
+                directement de votre besoin —{' '}
+                <a href="#contact" className="font-semibold text-accent hover:underline">
+                  écrivez-moi
+                </a>
+                .
+              </p>
+            )}
+
+            {/* Grille jamais vide : cartes réelles d'abord, puis « en préparation ». */}
+            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {proofs.map((proof) => (
                 <article
                   key={proof.id}
@@ -170,178 +191,198 @@ export default async function PublicPortfolioPage() {
                   </div>
                 </article>
               ))}
+
+              {PREPARED_CASES.map((metier) => (
+                <article
+                  key={metier}
+                  className="flex flex-col rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6"
+                >
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    {metier}
+                  </p>
+                  <p className="mt-3 inline-flex w-fit rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-600">
+                    En préparation
+                  </p>
+                </article>
+              ))}
             </div>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* 4. SERVICES ---------------------------------------------------- */}
-      <section className="border-y border-slate-100 bg-slate-50 px-5 py-16 sm:py-20">
-        <div className="mx-auto w-full max-w-5xl">
-          <h2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl">
-            Ce que je peux automatiser pour vous
-          </h2>
+        {/* 3 bis. ANATOMIE D'UNE ÉTUDE DE CAS ---------------------------- */}
+        <CaseAnatomy />
 
-          <div className="mt-10 grid gap-5 sm:grid-cols-3">
-            {SERVICES.map((service) => (
-              <div
-                key={service.title}
-                className="rounded-2xl border border-slate-200 bg-white p-6"
-              >
-                <h3 className="text-base font-bold">{service.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  {service.description}
+        {/* 4. SERVICES ---------------------------------------------------- */}
+        <section
+          id="services"
+          className="scroll-mt-28 border-y border-slate-100 bg-slate-50 px-5 py-16 sm:scroll-mt-20 sm:py-20"
+        >
+          <div className="mx-auto w-full max-w-5xl">
+            <h2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl">
+              Ce que je peux automatiser pour vous
+            </h2>
+
+            <div className="mt-10 grid gap-5 sm:grid-cols-3">
+              {SERVICES.map((service) => (
+                <div
+                  key={service.title}
+                  className="rounded-2xl border border-slate-200 bg-white p-6"
+                >
+                  <h3 className="text-base font-bold">{service.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                    {service.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 5. À PROPOS ---------------------------------------------------- */}
+        <section id="demarche" className="scroll-mt-28 px-5 py-16 sm:scroll-mt-20 sm:py-20">
+          <div className="mx-auto w-full max-w-2xl">
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">À propos</h2>
+            <p className="mt-5 text-base leading-relaxed text-slate-600">
+              Je suis Sterve, spécialiste en automatisation IA. Je conçois des
+              systèmes concrets qui suppriment le travail répétitif des
+              indépendants et petites structures — pour qu&apos;ils récupèrent du
+              temps et arrêtent de perdre des clients. Je pars d&apos;un problème
+              réel, je construis, je livre, je mesure : chaque projet est une
+              preuve, pas une promesse.
+            </p>
+          </div>
+        </section>
+
+        {/* 6. CONTACT ----------------------------------------------------- */}
+        <section id="contact" className="scroll-mt-28 px-5 pb-16 sm:scroll-mt-20 sm:pb-20">
+          <div className="mx-auto w-full max-w-3xl rounded-3xl bg-slate-900 px-6 py-12 text-center sm:px-12 sm:py-16">
+            <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+              Discutons de votre projet
+            </h2>
+            <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-slate-300">
+              Décrivez-moi la tâche qui vous prend le plus de temps. Je vous dis
+              si elle est automatisable, et comment.
+            </p>
+
+            <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row">
+              {/*
+                Les canaux viennent de src/lib/contact.ts. Un canal encore fermé
+                y vaut `null` et n'est tout simplement pas rendu : pas de lien
+                mort sur une page qui invite à écrire.
+              */}
+              {activeLinks(CONTACT_LINKS).map((link, index) => {
+                // Un mailto reste dans le contexte courant ; un profil externe
+                // s'ouvre à côté, pour ne pas faire perdre la page au visiteur.
+                const isExternal = link.href.startsWith('http')
+
+                return (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target={isExternal ? '_blank' : undefined}
+                  rel={isExternal ? 'noopener noreferrer' : undefined}
+                  className={
+                    index === 0
+                      ? 'rounded-full bg-accent px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-accent-hover'
+                      : 'rounded-full border border-slate-600 px-7 py-3.5 text-sm font-semibold text-slate-200 transition-colors hover:border-white hover:text-white'
+                  }
+                >
+                  {link.label}
+                </a>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* 7. FOOTER ------------------------------------------------------ */}
+        <footer className="border-t-2 border-slate-200 bg-slate-50 px-5 pt-12 pb-6">
+          <div className="mx-auto w-full max-w-5xl">
+            <div className="grid gap-10 sm:grid-cols-3">
+              {/* Marque — le logo porte déjà le nom, on ne le réécrit pas. */}
+              <div>
+                <div className="flex items-center gap-3">
+                  <Image
+                    src="/logo-sterveshop.png"
+                    alt="Sterveshop"
+                    width={36}
+                    height={36}
+                    className="h-9 w-auto"
+                  />
+                  <span className="text-sm font-medium text-slate-500">
+                    Architecte IA
+                  </span>
+                </div>
+
+                <p className="mt-4 text-sm font-semibold text-slate-700">
+                  Systèmes livrés, mesurés, prouvés.
+                </p>
+
+                <p className="mt-2 text-sm leading-relaxed text-slate-500">
+                  J&apos;automatise les tâches répétitives qui font perdre des
+                  heures — et je livre la preuve chiffrée que ça marche.
                 </p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* 5. À PROPOS ---------------------------------------------------- */}
-      <section id="demarche" className="scroll-mt-8 px-5 py-16 sm:py-20">
-        <div className="mx-auto w-full max-w-2xl">
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">À propos</h2>
-          <p className="mt-5 text-base leading-relaxed text-slate-600">
-            Je suis Sterve, spécialiste en automatisation IA. Je conçois des
-            systèmes concrets qui suppriment le travail répétitif des
-            indépendants et petites structures — pour qu&apos;ils récupèrent du
-            temps et arrêtent de perdre des clients. Je pars d&apos;un problème
-            réel, je construis, je livre, je mesure. Chaque cas est une preuve,
-            pas une promesse.
-          </p>
-        </div>
-      </section>
-
-      {/* 6. CONTACT ----------------------------------------------------- */}
-      <section id="contact" className="scroll-mt-8 px-5 pb-16 sm:pb-20">
-        <div className="mx-auto w-full max-w-3xl rounded-3xl bg-slate-900 px-6 py-12 text-center sm:px-12 sm:py-16">
-          <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            Discutons de votre projet
-          </h2>
-          <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-slate-300">
-            Décrivez-moi la tâche qui vous prend le plus de temps. Je vous dis
-            si elle est automatisable, et comment.
-          </p>
-
-          <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row">
-            {/*
-              Les canaux viennent de src/lib/contact.ts. Un canal encore fermé
-              y vaut `null` et n'est tout simplement pas rendu : pas de lien
-              mort sur une page qui invite à écrire.
-            */}
-            {activeLinks(CONTACT_LINKS).map((link, index) => {
-              // Un mailto reste dans le contexte courant ; un profil externe
-              // s'ouvre à côté, pour ne pas faire perdre la page au visiteur.
-              const isExternal = link.href.startsWith('http')
-
-              return (
-              <a
-                key={link.label}
-                href={link.href}
-                target={isExternal ? '_blank' : undefined}
-                rel={isExternal ? 'noopener noreferrer' : undefined}
-                className={
-                  index === 0
-                    ? 'rounded-full bg-accent px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-accent-hover'
-                    : 'rounded-full border border-slate-600 px-7 py-3.5 text-sm font-semibold text-slate-200 transition-colors hover:border-white hover:text-white'
-                }
-              >
-                {link.label}
-              </a>
-              )
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* 7. FOOTER ------------------------------------------------------ */}
-      <footer className="border-t-2 border-slate-200 bg-slate-50 px-5 pt-12 pb-6">
-        <div className="mx-auto w-full max-w-5xl">
-          <div className="grid gap-10 sm:grid-cols-3">
-            {/* Marque — le logo porte déjà le nom, on ne le réécrit pas. */}
-            <div>
-              <div className="flex items-center gap-3">
-                <Image
-                  src="/logo-sterveshop.png"
-                  alt="Sterveshop"
-                  width={36}
-                  height={36}
-                  className="h-9 w-auto"
-                />
-                <span className="text-sm font-medium text-slate-500">
-                  Architecte IA
-                </span>
-              </div>
-
-              <p className="mt-4 text-sm font-semibold text-slate-700">
-                Systèmes livrés, mesurés, prouvés.
-              </p>
-
-              <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                J&apos;automatise les tâches répétitives qui font perdre des
-                heures — et je livre la preuve chiffrée que ça marche.
-              </p>
-            </div>
-
-            {/* Naviguer — uniquement des ancres qui existent sur la page. */}
-            <nav aria-label="Navigation du pied de page">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                Naviguer
-              </h2>
-              <ul className="mt-4 space-y-2.5 text-sm">
-                {[
-                  { label: 'Études de cas', href: '#cas' },
-                  { label: 'Ma démarche', href: '#demarche' },
-                  { label: 'Me contacter', href: '#contact' },
-                ].map((item) => (
-                  <li key={item.href}>
-                    <a
-                      href={item.href}
-                      className="text-slate-500 transition-colors hover:text-accent"
-                    >
-                      {item.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-
-            {/* Me joindre — canaux issus de src/lib/contact.ts. */}
-            <div>
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                Me joindre
-              </h2>
-              <ul className="mt-4 space-y-2.5 text-sm">
-                {activeLinks([...CONTACT_LINKS, ...SOCIAL_LINKS]).map((link) => {
-                  const isExternal = link.href.startsWith('http')
-
-                  return (
-                    <li key={link.label}>
+              {/* Naviguer — uniquement des ancres qui existent sur la page. */}
+              <nav aria-label="Navigation du pied de page">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                  Naviguer
+                </h2>
+                <ul className="mt-4 space-y-2.5 text-sm">
+                  {[
+                    { label: 'Études de cas', href: '#cas' },
+                    { label: 'Ma démarche', href: '#demarche' },
+                    { label: 'Me contacter', href: '#contact' },
+                  ].map((item) => (
+                    <li key={item.href}>
                       <a
-                        href={link.href}
-                        target={isExternal ? '_blank' : undefined}
-                        rel={isExternal ? 'noopener noreferrer' : undefined}
+                        href={item.href}
                         className="text-slate-500 transition-colors hover:text-accent"
                       >
-                        {link.label}
+                        {item.label}
                       </a>
                     </li>
-                  )
-                })}
-              </ul>
+                  ))}
+                </ul>
+              </nav>
+
+              {/* Me joindre — canaux issus de src/lib/contact.ts. */}
+              <div>
+                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                  Me joindre
+                </h2>
+                <ul className="mt-4 space-y-2.5 text-sm">
+                  {activeLinks([...CONTACT_LINKS, ...SOCIAL_LINKS]).map((link) => {
+                    const isExternal = link.href.startsWith('http')
+
+                    return (
+                      <li key={link.label}>
+                        <a
+                          href={link.href}
+                          target={isExternal ? '_blank' : undefined}
+                          rel={isExternal ? 'noopener noreferrer' : undefined}
+                          className="text-slate-500 transition-colors hover:text-accent"
+                        >
+                          {link.label}
+                        </a>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            </div>
+
+            {/* Barre du bas ------------------------------------------------ */}
+            <div className="mt-10 flex flex-col items-center gap-3 border-t border-slate-200 pt-6 text-xs text-slate-400 sm:flex-row sm:justify-between">
+              <p>© 2026 Sterveshop · Architecte IA</p>
+              <a href="#haut" className="transition-colors hover:text-slate-700">
+                ↑ Haut de page
+              </a>
             </div>
           </div>
-
-          {/* Barre du bas ------------------------------------------------ */}
-          <div className="mt-10 flex flex-col items-center gap-3 border-t border-slate-200 pt-6 text-xs text-slate-400 sm:flex-row sm:justify-between">
-            <p>© 2026 Sterveshop · Architecte IA</p>
-            <a href="#haut" className="transition-colors hover:text-slate-700">
-              ↑ Haut de page
-            </a>
-          </div>
-        </div>
-      </footer>
-    </main>
+        </footer>
+      </main>
+    </>
   )
 }

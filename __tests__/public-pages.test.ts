@@ -147,7 +147,11 @@ describe('/p — vitrine', () => {
       'Systèmes livrés, mesurés, prouvés',
     ]
 
-    const positions = ordered.map((text) => html.indexOf(text))
+    // « À propos » est aussi un lien de la nav collante (SPEC-p S1) : la
+    // section se repère par son titre h2, pas par la première occurrence.
+    const positions = ordered.map((text) =>
+      text === 'À propos' ? html.search(/<h2[^>]*>À propos<\/h2>/) : html.indexOf(text)
+    )
     expect(positions.every((position) => position >= 0)).toBe(true)
     expect([...positions].sort((a, b) => a - b)).toEqual(positions)
   })
