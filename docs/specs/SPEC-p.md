@@ -25,3 +25,12 @@ D3 S4 : aucune preuve publiée → les 5 cartes statiques s'affichent (grille ja
 D4 S1 : Études de cas → #cas · Services → #services (à créer) · À propos → #demarche · Contact → #contact.
 D5 S1 : collante = sticky top-0, au-dessus du h1.
 D6 S7 : le texte exact est « chaque projet est une preuve, pas une promesse ».
+
+## Fiche /p/[slug] (cycle 4)
+
+F1 « Voir le système » = video_url de l'étude de cas uniquement, en lecteur intégré.
+   Aucun autre lien ni bouton dans cette section.
+F2 Cas vide : pas de lecteur valide (vidéo absente OU non reconnue) → aucune section
+   « Voir le système », aucun bouton.
+F3 deliverable_url n'apparaît jamais sur une page publique (/p et /p/[slug]) :
+   ni l'URL en texte, ni aucun href vers le livrable.

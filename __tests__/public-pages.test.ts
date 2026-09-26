@@ -359,14 +359,6 @@ describe('/p/[slug] — étude de cas', () => {
     expect(container.innerHTML).not.toContain('Voir le système')
   })
 
-  test('le lien vers le livrable source s’ouvre en sécurité', async () => {
-    const { container } = render(await renderCase())
-    const link = container.querySelector(`a[href="${CASE_STUDY.deliverable_url}"]`)
-
-    expect(link).toBeTruthy()
-    expect(link?.getAttribute('rel')).toContain('noopener')
-  })
-
   test('aucun emplacement de témoignage n’est rendu tant qu’il n’y a pas de donnée', async () => {
     const { container } = render(await renderCase())
 
@@ -386,5 +378,69 @@ describe('/p/[slug] — étude de cas', () => {
     expect(html).not.toContain('Le problème')
     expect(html).not.toContain("Ce que j'ai construit")
     expect(html).toContain('Le résultat')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// SPEC-p — Fiche /p/[slug] (F1 à F3)
+// ---------------------------------------------------------------------------
+
+/**
+ * Le livrable est un lien interne (dépôt, document de travail) : il sert à
+ * construire, pas à prouver. La fiche publique ne montre que la démo vidéo.
+ */
+
+function findSystemSection(container: HTMLElement) {
+  const heading = Array.from(container.querySelectorAll('h2')).find(
+    (h2) => h2.textContent?.trim() === 'Voir le système'
+  )
+
+  return heading?.closest('section') ?? null
+}
+
+function hrefsToDeliverable(container: HTMLElement) {
+  return Array.from(container.querySelectorAll('[href]')).filter((el) =>
+    el.getAttribute('href')?.startsWith(CASE_STUDY.deliverable_url)
+  )
+}
+
+describe('SPEC-p — Fiche /p/[slug]', () => {
+  test('F1 — « Voir le système » ne contient que le lecteur vidéo, aucun lien', async () => {
+    const { container } = render(await renderCase())
+    const section = findSystemSection(container)
+
+    expect(section).toBeTruthy()
+    expect(section?.querySelectorAll('iframe')).toHaveLength(1)
+    expect(section?.querySelectorAll('a')).toHaveLength(0)
+  })
+
+  test('F2 — sans vidéo, aucune section « Voir le système », même avec un livrable', async () => {
+    const { container } = render(await renderCase({ video_url: null }))
+
+    expect(container.innerHTML).not.toContain('Voir le système')
+  })
+
+  test('F2 — vidéo non reconnue : aucune section « Voir le système »', async () => {
+    const { container } = render(
+      await renderCase({ video_url: 'https://evil.com/x' })
+    )
+
+    expect(container.innerHTML).not.toContain('Voir le système')
+  })
+
+  test('F3 — la fiche /p/[slug] ne publie jamais le lien du livrable', async () => {
+    const { container } = render(await renderCase())
+
+    expect(container.innerHTML).not.toContain(CASE_STUDY.deliverable_url)
+    expect(hrefsToDeliverable(container)).toHaveLength(0)
+  })
+
+  test('F3 — la vitrine /p ne publie jamais le lien du livrable', async () => {
+    getPublicProofsMock.mockResolvedValue([CASE_STUDY])
+
+    const { container } = render(await PublicPortfolioPage())
+
+    expect(container.innerHTML).not.toContain(CASE_STUDY.deliverable_url)
+    expect(hrefsToDeliverable(container)).toHaveLength(0)
   })
 })

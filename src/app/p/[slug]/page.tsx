@@ -153,36 +153,26 @@ export default async function PublicProofPage({ params }: PublicProofPageProps) 
           )}
         </div>
 
-        {/* La preuve -------------------------------------------------- */}
-        {(embedUrl || proof.deliverable_url) && (
+        {/* La preuve --------------------------------------------------
+            Seule la démo vidéo est montrée (SPEC-p F1 à F3). Le livrable
+            est un lien interne : il n'apparaît jamais sur une page publique,
+            et une vidéo non reconnue ne laisse pas de section vide. */}
+        {embedUrl && (
           <section className="mt-12">
             <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
               Voir le système
             </h2>
 
-            {embedUrl && (
-              <div className="mt-4 aspect-video w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-900">
-                <iframe
-                  src={embedUrl}
-                  title={`Démonstration — ${proof.title}`}
-                  className="h-full w-full"
-                  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  loading="lazy"
-                />
-              </div>
-            )}
-
-            {proof.deliverable_url && (
-              <a
-                href={proof.deliverable_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-5 inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
-              >
-                Voir le système ↗
-              </a>
-            )}
+            <div className="mt-4 aspect-video w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-900">
+              <iframe
+                src={embedUrl}
+                title={`Démonstration — ${proof.title}`}
+                className="h-full w-full"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                loading="lazy"
+              />
+            </div>
           </section>
         )}
 
